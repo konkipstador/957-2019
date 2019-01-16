@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 
@@ -14,9 +15,11 @@ public class Drivetrain {
 
     CANSparkMax m_rightNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
 
     CANSparkMax m_leftNeoM = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_leftNeoS = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();
 
     private static Drivetrain m_drivetrain = null;
 
@@ -54,12 +57,17 @@ public class Drivetrain {
     }
 
     /** Returns the left encoder value. */
-    public int getLeftEncoder(){
-        return 0;
+    public double getLeftEncoder(){
+        return m_leftEncoder.getPosition();
     }
 
     /** Returns the right encoder value. */
-    public int getRightEncoder(){
-        return 0;
-    }    
+    public double getRightEncoder(){
+        return m_rightEncoder.getPosition();
+    }   
+    
+    /**  Returns the average left and right encoder values */
+    public double getEncoder(){
+        return Math.round((getRightEncoder() + getLeftEncoder()) / 2);
+    }
 }
