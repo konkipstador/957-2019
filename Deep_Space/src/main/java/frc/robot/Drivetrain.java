@@ -25,7 +25,7 @@ public class Drivetrain {
 
     /**
      * Drivetrain constructor, which is called automatically when an instance of the
-     * drivetrain is asked for. Do not call directly.
+     * drivetrain is asked for. You should not call directly.
      */
     public Drivetrain(){
         m_rightNeoS.follow(m_rightNeoM);
