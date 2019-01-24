@@ -27,4 +27,6 @@ public class PassiveHatch implements HatchFramework {
 
     /** Unused in passive mechanism */
     public void releaseHatch(){}   
+
+    public void work(){}
 }

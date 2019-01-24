@@ -23,6 +23,7 @@ public class Robot extends TimedRobot {
     HatchFramework m_hatchGrabber = new PassiveHatch();
     
     public void robotInit() {
+        
     }
 
     public void autonomousInit() {
