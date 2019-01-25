@@ -27,5 +27,9 @@ public interface HatchFramework{
     /** Skeleton function defined in individual mechanism classes */
     public void releaseHatch();
     /** Skeleton function defined in individual mechanism classes */
-    public void distanceToHatch();
+    public boolean grabState();
+    /** Skeleton function defined in individual mechanism classes */
+    public boolean extendState();
+    /** Skeleton function defined in individual mechanism classes */
+    public double distanceToHatch();
 }

@@ -2,14 +2,11 @@ package frc.robot.hatch_mechanisms;
 
 import edu.wpi.first.wpilibj.Solenoid;
 
-/**
- * Controls a passive hatch grabbing and placing mechanism created by Joe and
- * his team.
+/** Controls a hatch grabbing and placing mechanism created by Joe and his team.
  * 
- * Only uses the piston and ultrasonic sensor created in HatchFramework.java to
- * extend the mechanism to extend beyond the frame perimeter and to sense the
- * distance of hatches respectively.
- */
+ *  Uses a claw to grab and shoot panels and extends out the mechanism to place on
+ *  the Rocket. Also has an ultrasonic sensor to check if a panel has been grabbed. */
+
 public class Claw implements HatchFramework {
 
     Solenoid m_grabberPiston = new Solenoid(piston1Channel);
@@ -25,17 +22,29 @@ public class Claw implements HatchFramework {
     }
 
     /** Returns the distance to the hatch or wall in inches. */
-    public void distanceToHatch(){
-        rangeFinder.getRangeInches();
+    public double distanceToHatch(){
+        return rangeFinder.getRangeInches();
     }
 
-    /** Unused in passive mechanism */
+    /** Grabs the hatch */
     public void grabHatch(){
         m_grabberPiston.set(false);
     }
 
-    /** Unused in passive mechanism */
+    /** Releases the hatch */
     public void releaseHatch(){
         m_grabberPiston.set(true);
+    }
+
+    /** Returns if the grabber mechanism is extended */
+    public boolean extendState(){
+        return extenderPiston.get();
+    }
+
+    /** Returns if the grabber mechanism is grabbing */
+    public boolean grabState(){
+        // This value is inverted because when the grabber piston is extended, 
+        // the mechanism is releasing the hatch.
+        return !m_grabberPiston.get();
     }
 }

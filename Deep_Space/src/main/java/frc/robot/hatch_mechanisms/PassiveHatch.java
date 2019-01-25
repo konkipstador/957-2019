@@ -4,7 +4,8 @@ package frc.robot.hatch_mechanisms;
  * 
  *  Only uses the piston and ultrasonic sensor created in HatchFramework.java to extend
  *  the mechanism to extend beyond the frame perimeter and to sense the distance of
- *  hatches respectively.*/
+ *  hatches respectively. */
+
 public class PassiveHatch implements HatchFramework {
 
     /** Extends the hatch grabber mechanism. */
@@ -18,8 +19,8 @@ public class PassiveHatch implements HatchFramework {
     }
 
     /** Returns the distance to the hatch or wall in inches. */
-    public void distanceToHatch(){
-        rangeFinder.getRangeInches();
+    public double distanceToHatch(){
+        return rangeFinder.getRangeInches();
     }
 
     /** Unused in passive mechanism */
@@ -28,5 +29,11 @@ public class PassiveHatch implements HatchFramework {
     /** Unused in passive mechanism */
     public void releaseHatch(){}   
 
-    public void work(){}
+    /** Returns if the grabber mechanism is extended */
+    public boolean extendState(){
+        return extenderPiston.get();
+    }
+
+    /** Unused in passive mechanism */
+    public boolean grabState(){return true;}
 }

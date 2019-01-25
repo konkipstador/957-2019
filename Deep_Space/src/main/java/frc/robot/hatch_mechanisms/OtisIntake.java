@@ -2,18 +2,16 @@ package frc.robot.hatch_mechanisms;
 
 import edu.wpi.first.wpilibj.Solenoid;
 
-/**
- * Controls a passive hatch grabbing and placing mechanism created by Joe and
- * his team.
+/** Controls a hatch grabbing and placing mechanism created by Casey and his team.
  * 
- * Only uses the piston and ultrasonic sensor created in HatchFramework.java to
- * extend the mechanism to extend beyond the frame perimeter and to sense the
- * distance of hatches respectively.
- */
+ *  Uses 3 solenoids to control the grabber mechanism. Two grab the panel itself and
+ *  one extends to place the panel. Also has an ultrasonic sensor to check if a panel
+ *  has been grabbed. */
+
 public class OtisIntake implements HatchFramework {
 
-    Solenoid m_graberPistion1 = new Solenoid(piston1Channel);
-    Solenoid m_graberPistion2 = new Solenoid(piston2Channel);
+    Solenoid m_grabberPiston1 = new Solenoid(piston1Channel);
+    Solenoid m_grabberPiston2 = new Solenoid(piston2Channel);
 
     /** Extends the hatch grabber mechanism. */
     public void extend(){
@@ -26,19 +24,31 @@ public class OtisIntake implements HatchFramework {
     }
 
     /** Returns the distance to the hatch or wall in inches. */
-    public void distanceToHatch(){
-        rangeFinder.getRangeInches();
+    public double distanceToHatch(){
+        return rangeFinder.getRangeInches();
     }
 
-    /** Unused in passive mechanism */
+    /** Grabs the hatch */
     public void grabHatch(){
-        m_graberPistion1.set(false);
-        m_graberPistion2.set(false);
+        m_grabberPiston1.set(false);
+        m_grabberPiston2.set(false);
     }
 
-    /** Unused in passive mechanism */
+    /** Releases the hatch */
     public void releaseHatch(){
-        m_graberPistion1.set(true);
-        m_graberPistion2.set(true);
-    }   
+        m_grabberPiston1.set(true);
+        m_grabberPiston2.set(true);
+    } 
+    
+    /** Returns if the grabber mechanism is extended */
+    public boolean extendState(){
+        return extenderPiston.get();
+    }
+
+    /** Returns if the grabber mechanism is grabbing */
+    public boolean grabState(){
+        // This value is inverted because when the grabber piston is extended, 
+        // the mechanism is releasing the hatch.
+        return !m_grabberPiston1.get();
+    }
 }

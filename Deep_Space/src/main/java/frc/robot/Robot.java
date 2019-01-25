@@ -20,7 +20,7 @@ import frc.robot.hatch_mechanisms.*;
 public class Robot extends TimedRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
-    HatchFramework m_hatchGrabber = new PassiveHatch();
+    HatchFramework m_hatchGrabber = new Claw();
     
     public void robotInit() {
         
