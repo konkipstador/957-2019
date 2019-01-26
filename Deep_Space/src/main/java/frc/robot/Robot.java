@@ -22,8 +22,7 @@ public class Robot extends TimedRobot {
     Drivetrain m_drivetrain = Drivetrain.getInstance();
     HatchFramework m_hatchGrabber = new Claw();
     
-    public void robotInit() {
-        
+    public void robotInit() {      
     }
 
     public void autonomousInit() {
