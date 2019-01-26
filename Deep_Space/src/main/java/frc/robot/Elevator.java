@@ -35,7 +35,6 @@ public class Elevator {
 		elevator.config_kI(0, ki, 20);
         elevator.config_kD(0, kd, 20);
         elevator.config_kF(0, kf, 20);
-
 	}
 	
 	public void setLevel(LiftLevels level) {	

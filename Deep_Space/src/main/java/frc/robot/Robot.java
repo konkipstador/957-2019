@@ -8,6 +8,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import frc.robot.Pathweaver.Path;
 import frc.robot.hatch_mechanisms.*;
 
 /**
@@ -20,15 +21,22 @@ import frc.robot.hatch_mechanisms.*;
 public class Robot extends TimedRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
+    Pathweaver m_pathweaver = Pathweaver.getInstance();
     HatchFramework m_hatchGrabber = new Claw();
+
+    Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
     
     public void robotInit() {      
+        m_pathweaver.loadPath(m_autoPath);
     }
 
     public void autonomousInit() {
+        m_drivetrain.resetEncoders();
+        m_drivetrain.resetNavX();
     }
 
     public void autonomousPeriodic() {
+        m_pathweaver.runPath(0);
     }
 
     public void teleopInit() {
