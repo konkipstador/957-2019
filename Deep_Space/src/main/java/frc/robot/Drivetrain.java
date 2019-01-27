@@ -4,7 +4,9 @@ import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+
 import edu.wpi.first.wpilibj.SPI.Port;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /** 
  * Class to operate the drivetrain of the robot.
@@ -17,18 +19,18 @@ public class Drivetrain {
 
     AHRS m_navx = new AHRS(Port.kMXP);
 
-    CANSparkMax m_rightNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANSparkMax m_rightNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
 
-    CANSparkMax m_leftNeoM = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANSparkMax m_leftNeoS = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANSparkMax m_leftNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANSparkMax m_leftNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();
 
     private static Drivetrain m_drivetrain = null;
 
-    private static final int k_freeCurrentLimit = 30;
-    private static final int k_stallCurrentLimit = 30;
+    private static final int k_freeCurrentLimit = 40;
+    private static final int k_stallCurrentLimit = 40;
 
     private int m_rightEncoderOffset = 0;
     private int m_leftEncoderOffset = 0;
@@ -46,6 +48,8 @@ public class Drivetrain {
         m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
         m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
         m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+
+        m_rightNeoM.setRampRate
     }
 
     /** Used to grabe a singleton instance of the Drivetrain that is syncronized. */
@@ -71,7 +75,7 @@ public class Drivetrain {
 
     /** Set the speeds of the left motors. */
     public void setLeft(double leftSpeed){
-        m_leftNeoM.set(leftSpeed);
+        m_leftNeoM.set(-leftSpeed);
     }
 
     /** Set the speeds of the right motors. */
@@ -81,13 +85,18 @@ public class Drivetrain {
 
     /** Arcade Drive command for TeleOp driving. */
     public void arcadeDrive(double speed, double turn){
-        setLeft(speed+turn);
-        setRight(speed-turn);
+        if(speed > -.1 && speed < .1)
+            speed = 0;
+        if(turn > -.1 && turn < .1)
+            turn = 0;
+
+        setLeft(speed-turn);
+        setRight(speed+turn);
     }
 
     /** Returns the left encoder value. */
     public int getLeftEncoder(){
-        return (int)m_leftEncoder.getPosition()-m_leftEncoderOffset;
+        return (int)-m_leftEncoder.getPosition()+m_leftEncoderOffset;
     }
 
     /** Returns the right encoder value. */
@@ -101,6 +110,9 @@ public class Drivetrain {
     }
 
     public double[] getTemp(){
-        return new double[]{m_leftNeoM.getMotorTemperature()};
+        SmartDashboard.putNumber("Power Draw R", m_rightNeoM.getBusVoltage());
+        SmartDashboard.putNumber("Power Draw L", m_leftNeoM.getBusVoltage());
+        return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};
+        
     }
 }

@@ -7,9 +7,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Pathweaver.Path;
-import frc.robot.hatch_mechanisms.*;
+import frc.robot.RobotState.State;
+import frc.robot.hatch_mechanisms.Claw;
+import frc.robot.hatch_mechanisms.HatchFramework;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -22,17 +26,34 @@ public class Robot extends TimedRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
     Pathweaver m_pathweaver = Pathweaver.getInstance();
+    RobotState m_robotState = RobotState.getInstance();
+    Vision m_vision = Vision.getInstance();
     HatchFramework m_hatchGrabber = new Claw();
+    Joystick m_joystick = new Joystick(0);
+
+    int k_button1 = 1; // Raise to low height
+    int k_button2 = 2; // Raise to medium height
+    int k_button3 = 2; // Raise to high height
+    int k_button4 = 3; // Raise to Cargo Ship height with Cargo
+    int k_button5 = 2; // Switch between intaking balls and cargo
+    int k_button6 = 1; // Auto grab and place
+    int k_button7 = 6; // Extend and retract panel grabber, run passthrough with Cargo
+    int k_button8 = 7; // Actuate grab state with Panels, shoot with Cargo
+    int k_button9 = 8; // Actuate endgame
+    int k_button10 = 9; // Swap between Cargo Ship and Rocket
 
     Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
     
     public void robotInit() {      
         m_pathweaver.loadPath(m_autoPath);
+        m_robotState.setState(State.GRAB_HATCH);
+        
     }
 
     public void autonomousInit() {
         m_drivetrain.resetEncoders();
         m_drivetrain.resetNavX();
+
     }
 
     public void autonomousPeriodic() {
@@ -43,12 +64,24 @@ public class Robot extends TimedRobot {
     }
 
     public void teleopPeriodic() {
+        SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
+        
+        if(m_joystick.getRawButton(1)){
+            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
+        }else{
+            m_drivetrain.arcadeDrive(0,m_vision.)
+        }
+            
     }
 
     public void testInit() {
     }
 
     public void testPeriodic() {
+    }
+
+    public void setState(){
+
     }
 
 }

@@ -1,5 +1,6 @@
 package frc.robot;
 
+import frc.robot.RobotState.State;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -7,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 public class Elevator {
 
 	private static Elevator m_elevatorSystem;	// Synchronized Elevator object
+	RobotState m_robotState = RobotState.getInstance();
 
 	TalonSRX elevator = new TalonSRX(6);	// Elevator Talon
 	int targetPosition = 0;
@@ -38,7 +40,14 @@ public class Elevator {
 	}
 	
 	public void setLevel(LiftLevels level) {	
+		if(m_robotState.state() != State.NULL){
+			getCurrentPosition = true;
+			targetPosition = level.encoderPosition();
+			elevator.set(ControlMode.MotionMagic, targetPosition);
+		}	
+	}
 
+	public void forceLevel(LiftLevels level) {	
 		getCurrentPosition = true;
 		targetPosition = level.encoderPosition();
 		elevator.set(ControlMode.MotionMagic, targetPosition);

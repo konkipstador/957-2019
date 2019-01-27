@@ -2,7 +2,9 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.PathfinderFRC;
 import jaci.pathfinder.Trajectory;
@@ -14,9 +16,9 @@ public class Pathweaver {
     public Drivetrain m_drivetrain = Drivetrain.getInstance();  // Grabbing encoder values from drivetrain
 
     // PATHFINDER CONSTANTS
-    private static final int k_ticks_per_rev = 1024;
-    private static final double k_wheel_diameter = 4.0 / 12.0;
-    private static final double k_max_velocity = 10;
+    private static final int k_ticks_per_rev = 365;
+    private static final double k_wheel_diameter = 6/12;
+    private static final double k_max_velocity = 5;
     private static final double kp = 1;
     private static final double ki = 0;
     private static final double kd = 0;
@@ -27,8 +29,6 @@ public class Pathweaver {
 
     private ArrayList<Trajectory> m_left_trajectories;
     private ArrayList<Trajectory> m_right_trajectories;
-
-    private Notifier m_notifier;
 
     /** Syncronized Signleton creator. */
     public static synchronized Pathweaver getInstance(){
@@ -55,6 +55,7 @@ public class Pathweaver {
             m_left_trajectories.add(PathfinderFRC.getTrajectory(path.getName() + ".right"));
             m_right_trajectories.add(PathfinderFRC.getTrajectory(path.getName() + ".left"));
 
+            System.out.println("passed");
             // Left Followers
             EncoderFollower follower = new EncoderFollower(m_left_trajectories.get(pathCount));
             follower.configureEncoder(0, k_ticks_per_rev, k_wheel_diameter);
@@ -87,14 +88,17 @@ public class Pathweaver {
         double heading_difference = Pathfinder.boundHalfDegrees(desired_heading - heading);
         double turn =  0.8 * (-1.0/80.0) * heading_difference;
 
-        m_drivetrain.setLeft(leftPower + turn);
-        m_drivetrain.setRight(rightPower - turn);
+        System.out.println();
+        SmartDashboard.putNumber("encoder",m_drivetrain.getEncoder());
+        SmartDashboard.putNumber("angle",desired_heading);
+        m_drivetrain.setLeft(leftPower);
+        m_drivetrain.setRight(rightPower);
         return false;
     }
 
     /** Enum to promote readability of auto paths. */
     public enum Path{
-        ROCKET_RIGHT_1("RocketRight1"), ROCKET_RIGHT_2("RocketRight2"), ROCKET_RIGHT_3("RocketRight3");
+        ROCKET_RIGHT_1("RightRocket1"), ROCKET_RIGHT_2("RightRocket2"), ROCKET_RIGHT_3("RightRocket3");
 
         // Placeholder variables for the Enumerator structure
         private final String m_pathName;
