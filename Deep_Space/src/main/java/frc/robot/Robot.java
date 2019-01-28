@@ -25,22 +25,31 @@ import frc.robot.hatch_mechanisms.HatchFramework;
 public class Robot extends TimedRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
+    Elevator m_elevator = Elevator.getInstance();
     Pathweaver m_pathweaver = Pathweaver.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
     HatchFramework m_hatchGrabber = new Claw();
     Joystick m_joystick = new Joystick(0);
 
-    int k_button1 = 1; // Raise to low height
-    int k_button2 = 2; // Raise to medium height
-    int k_button3 = 2; // Raise to high height
-    int k_button4 = 3; // Raise to Cargo Ship height with Cargo
-    int k_button5 = 2; // Switch between intaking balls and cargo
-    int k_button6 = 1; // Auto grab and place
-    int k_button7 = 6; // Extend and retract panel grabber, run passthrough with Cargo
-    int k_button8 = 7; // Actuate grab state with Panels, shoot with Cargo
-    int k_button9 = 8; // Actuate endgame
-    int k_button10 = 9; // Swap between Cargo Ship and Rocket
+    /** Elevator: Low Port/Floor */
+    int k_button1 = 1;
+    /** Elevator: Medium Port */ 
+    int k_button2 = 2;
+    /** Elevator: High Port */
+    int k_button3 = 2;
+    /** Swap between Cargo and Hatch grabbing OR switch target between Rocket and Cargo Ship */
+    int k_button4 = 3;
+    /** Perform automated action or cancel automated action */
+    int k_button5 = 2;
+    /** Actuate leapfrog */
+    int k_button6 = 1;
+    /** Change claw grab state OR manually shoot cargo */
+    int k_button7 = 6;
+    /** Extend claw beyond bumpers OR run passthrough manually */
+    int k_button8 = 7; 
+
+    boolean m_autoState = false;
 
     Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
     
@@ -69,7 +78,52 @@ public class Robot extends TimedRobot {
         if(m_joystick.getRawButton(1)){
             m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
         }else{
-            m_drivetrain.arcadeDrive(0,m_vision.)
+            m_drivetrain.arcadeDrive(0,m_vision.getTargetLocation()/160);
+        }
+
+        switch(m_robotState.state()){
+
+            case GRAB_HATCH:
+
+                /** Automated function enabled */
+                if(m_autoState){
+
+                }else{
+
+                    /** Lower elevator to low position */
+                    if(m_joystick.getRawButton(k_button1)){
+                        m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                    }
+
+                    /** Enable cargo grabbing if elevator is in the low position and automation is disabled */
+                    if(m_joystick.getRawButtonReleased(k_button4) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
+                        m_elevator.setLevel(LiftLevels.GROUND);
+                        m_robotState.setState(State.GRAB_CARGO);
+                        // TODO: Bring down and start intake
+                    }
+
+                    /** Enable automated grabbing */
+                    if(m_joystick.getRawButtonReleased(k_button5)){
+                        m_autoState = true;
+                    }
+
+                    // MANUAL OVERRIDE CONTROLS
+                    /** Actuate claw */
+                    if(m_joystick.getRawButton(k_button6)){
+                        m_hatchGrabber.grabHatch();
+                        m_robotState.setState(State.PLACE_PANEL);
+                    }
+
+                    /**  */
+                    if(m_joystick.getRawButton(k_button7)){
+
+                    }
+                }
+
+                break;
+
+
+
         }
             
     }

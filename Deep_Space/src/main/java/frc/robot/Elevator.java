@@ -14,6 +14,8 @@ public class Elevator {
 	int targetPosition = 0;
 	int currentPos = 0;	
 	boolean getCurrentPosition = true;
+
+	LiftLevels m_targetLevel = LiftLevels.GROUND;
 		
 	public Elevator() {
 
@@ -40,11 +42,14 @@ public class Elevator {
 	}
 	
 	public void setLevel(LiftLevels level) {	
-		if(m_robotState.state() != State.NULL){
-			getCurrentPosition = true;
-			targetPosition = level.encoderPosition();
-			elevator.set(ControlMode.MotionMagic, targetPosition);
-		}	
+		getCurrentPosition = true;
+		m_targetLevel = level;
+		targetPosition = level.encoderPosition();
+		elevator.set(ControlMode.MotionMagic, targetPosition);
+	}
+
+	public LiftLevels getLevel(){
+		return m_targetLevel;
 	}
 
 	public void forceLevel(LiftLevels level) {	

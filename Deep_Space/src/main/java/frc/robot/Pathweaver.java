@@ -40,7 +40,6 @@ public class Pathweaver {
 
     /** Overwrites previous loaded paths and generates new ones strung from Path objects. */
     public void loadPath(Path[] paths){
-        ArrayList<Path> pathArray = new ArrayList<Path>(Arrays.asList(paths));
 
         m_left_followers = new ArrayList<EncoderFollower>();
         m_right_followers = new ArrayList<EncoderFollower>();
@@ -55,7 +54,7 @@ public class Pathweaver {
             m_left_trajectories.add(PathfinderFRC.getTrajectory(path.getName() + ".right"));
             m_right_trajectories.add(PathfinderFRC.getTrajectory(path.getName() + ".left"));
 
-            System.out.println("passed");
+            System.out.println("Loaded path "+ path.getName());
             // Left Followers
             EncoderFollower follower = new EncoderFollower(m_left_trajectories.get(pathCount));
             follower.configureEncoder(0, k_ticks_per_rev, k_wheel_diameter);
@@ -67,6 +66,8 @@ public class Pathweaver {
             follower.configureEncoder(0, k_ticks_per_rev, k_wheel_diameter);
             follower.configurePIDVA(kp, ki, kd, 1/k_max_velocity, ka);
             m_right_followers.add(follower);
+
+            System.out.println("Loaded Encoder Followers for "+ path.getName());
 
             pathCount++;
         }
