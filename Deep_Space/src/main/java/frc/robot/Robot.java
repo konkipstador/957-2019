@@ -29,7 +29,7 @@ public class Robot extends TimedRobot {
     Pathweaver m_pathweaver = Pathweaver.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
-    HatchFramework m_hatchGrabber = new Claw();
+    //HatchFramework m_hatchGrabber = new Claw();
     Joystick m_joystick = new Joystick(0);
 
     /** Elevator: Low Port/Floor */
@@ -75,56 +75,10 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
         
-        if(m_joystick.getRawButton(1)){
-            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
-        }else{
-            m_drivetrain.arcadeDrive(0,m_vision.getTargetLocation()/160);
-        }
+        m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(0));
 
-        switch(m_robotState.state()){
-
-            case GRAB_HATCH:
-
-                /** Automated function enabled */
-                if(m_autoState){
-
-                }else{
-
-                    /** Lower elevator to low position */
-                    if(m_joystick.getRawButton(k_button1)){
-                        m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                    }
-
-                    /** Enable cargo grabbing if elevator is in the low position and automation is disabled */
-                    if(m_joystick.getRawButtonReleased(k_button4) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
-                        m_elevator.setLevel(LiftLevels.GROUND);
-                        m_robotState.setState(State.GRAB_CARGO);
-                        // TODO: Bring down and start intake
-                    }
-
-                    /** Enable automated grabbing */
-                    if(m_joystick.getRawButtonReleased(k_button5)){
-                        m_autoState = true;
-                    }
-
-                    // MANUAL OVERRIDE CONTROLS
-                    /** Actuate claw */
-                    if(m_joystick.getRawButton(k_button6)){
-                        m_hatchGrabber.grabHatch();
-                        m_robotState.setState(State.PLACE_PANEL);
-                    }
-
-                    /**  */
-                    if(m_joystick.getRawButton(k_button7)){
-
-                    }
-                }
-
-                break;
-
-
-
-        }
+        
+        
             
     }
 

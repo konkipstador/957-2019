@@ -10,7 +10,7 @@ public class Elevator {
 	private static Elevator m_elevatorSystem;	// Synchronized Elevator object
 	RobotState m_robotState = RobotState.getInstance();
 
-	TalonSRX elevator = new TalonSRX(6);	// Elevator Talon
+	//TalonSRX elevator = new TalonSRX(6);	// Elevator Talon
 	int targetPosition = 0;
 	int currentPos = 0;	
 	boolean getCurrentPosition = true;
@@ -19,6 +19,7 @@ public class Elevator {
 		
 	public Elevator() {
 
+		/*
 		elevator.configPeakCurrentLimit(29, 20);
 		elevator.configPeakCurrentDuration(10, 20);
 		elevator.configContinuousCurrentLimit(25, 20);
@@ -38,14 +39,15 @@ public class Elevator {
 		elevator.config_kP(0, kp, 20);
 		elevator.config_kI(0, ki, 20);
         elevator.config_kD(0, kd, 20);
-        elevator.config_kF(0, kf, 20);
+		elevator.config_kF(0, kf, 20);
+		*/
 	}
 	
 	public void setLevel(LiftLevels level) {	
 		getCurrentPosition = true;
 		m_targetLevel = level;
 		targetPosition = level.encoderPosition();
-		elevator.set(ControlMode.MotionMagic, targetPosition);
+		//elevator.set(ControlMode.MotionMagic, targetPosition);
 	}
 
 	public LiftLevels getLevel(){
@@ -55,11 +57,11 @@ public class Elevator {
 	public void forceLevel(LiftLevels level) {	
 		getCurrentPosition = true;
 		targetPosition = level.encoderPosition();
-		elevator.set(ControlMode.MotionMagic, targetPosition);
+		//elevator.set(ControlMode.MotionMagic, targetPosition);
 	}
 
 	public int getRaw() {
-		return elevator.getSelectedSensorPosition(0);
+		return 0;
 	}
 
 	public double maximumDriveSpeed() {

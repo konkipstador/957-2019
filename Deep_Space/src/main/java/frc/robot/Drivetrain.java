@@ -1,9 +1,11 @@
 package frc.robot;
 
-import com.kauailabs.navx.frc.AHRS;
+//import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
+import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.ConfigParameter;
 
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -17,24 +19,29 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Drivetrain {
 
-    AHRS m_navx = new AHRS(Port.kMXP);
+    //AHRS m_navx = new AHRS(Port.kMXP);
+
+    double kp = 0.0001;
+    double ki = 0;
+    double kd = 0;
 
     CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
+    MiniPID c_right = new MiniPID(kp,ki,kd);
 
     CANSparkMax m_leftNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_leftNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();
+    MiniPID c_left = new MiniPID(kp,ki,kd);
 
     private static Drivetrain m_drivetrain = null;
 
     private static final int k_freeCurrentLimit = 40;
     private static final int k_stallCurrentLimit = 40;
 
-    private int m_rightEncoderOffset = 0;
-    private int m_leftEncoderOffset = 0;
-
+    double m_rightEncoderOffset = 0;
+    double m_leftEncoderOffset = 0;
     /**
      * Drivetrain constructor, which is called automatically when an instance of the
      * drivetrain is asked for. You should not call directly.
@@ -44,12 +51,14 @@ public class Drivetrain {
         m_leftNeoS.follow(m_leftNeoM);
 
         // Neo Current Limits
-        m_rightNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-
-        m_rightNeoM.setRampRate
+        //m_rightNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        //m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        //m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        //m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        //m_rightNeoM.setRampRate(0);
+        //m_rightNeoS.setRampRate(0);
+        //m_leftNeoM.setRampRate(0);
+        //m_leftNeoS.setRampRate(0);
     }
 
     /** Used to grabe a singleton instance of the Drivetrain that is syncronized. */
@@ -63,14 +72,16 @@ public class Drivetrain {
     public void resetEncoders(){
         m_rightEncoderOffset = (int)m_rightEncoder.getPosition();
         m_leftEncoderOffset = (int)m_leftEncoder.getPosition();
+        c_left.reset();
+        c_right.reset();
     }
 
     public void resetNavX(){
-        m_navx.reset();
+        //m_navx.reset();
     }
 
     public double getAngle(){
-        return m_navx.getAngle();
+        return 0;
     }
 
     /** Set the speeds of the left motors. */
@@ -90,18 +101,43 @@ public class Drivetrain {
         if(turn > -.1 && turn < .1)
             turn = 0;
 
-        setLeft(speed-turn);
-        setRight(speed+turn);
+        double left = bound(-1,1, speed);
+        double right = bound(-1,1,speed);
+
+        SmartDashboard.putNumber("leftValue", left);
+        SmartDashboard.putNumber("rightValue", right);
+
+        
+        double leftSpeed = c_left.getOutput(m_leftEncoder.getVelocity(), left*6000);
+        double rightSpeed = c_right.getOutput(m_rightEncoder.getVelocity(), right*6000);
+
+        SmartDashboard.putNumber("leftSpeed", leftSpeed);
+        SmartDashboard.putNumber("rightSpeed", rightSpeed);
+
+
+        setLeft(leftSpeed);
+        setRight(rightSpeed);
+        SmartDashboard.putNumber("rpm l", m_leftEncoder.getVelocity());
+        SmartDashboard.putNumber("rpm r", m_rightEncoder.getVelocity());
+    }
+
+    private double bound(double lowerBound, double upperBound, double input){
+        if(input > upperBound)
+            return upperBound;
+        else if(input < lowerBound)
+            return lowerBound;
+
+        return input;
     }
 
     /** Returns the left encoder value. */
     public int getLeftEncoder(){
-        return (int)-m_leftEncoder.getPosition()+m_leftEncoderOffset;
+        return (int)(m_leftEncoder.getPosition()+m_leftEncoderOffset);
     }
 
     /** Returns the right encoder value. */
     public int getRightEncoder(){
-        return (int)m_rightEncoder.getPosition()-m_rightEncoderOffset;
+        return (int)(m_rightEncoder.getPosition()-m_rightEncoderOffset);
     }   
     
     /**  Returns the average left and right encoder values */
@@ -110,8 +146,8 @@ public class Drivetrain {
     }
 
     public double[] getTemp(){
-        SmartDashboard.putNumber("Power Draw R", m_rightNeoM.getBusVoltage());
-        SmartDashboard.putNumber("Power Draw L", m_leftNeoM.getBusVoltage());
+        SmartDashboard.putNumber("Power Draw R", m_rightNeoM.getOutputCurrent());
+        SmartDashboard.putNumber("Power Draw L", m_leftNeoM.getOutputCurrent());
         return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};
         
     }
