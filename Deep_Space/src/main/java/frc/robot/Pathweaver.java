@@ -81,7 +81,7 @@ public class Pathweaver {
             return true;
         }
 
-        double leftPower = m_left_followers.get(pathNumber).calculate(m_drivetrain.getLeftEncoder());
+        double leftPower = m_left_followers.get(pathNumber).calculate(-m_drivetrain.getLeftEncoder());
         double rightPower = m_right_followers.get(pathNumber).calculate(m_drivetrain.getRightEncoder());
 
         double heading = m_drivetrain.getAngle();
@@ -90,7 +90,7 @@ public class Pathweaver {
         double turn =  0.8 * (-1.0/80.0) * heading_difference;
 
         System.out.println();
-        SmartDashboard.putNumber("encoder",m_drivetrain.getEncoder());
+        SmartDashboard.putNumber("encoder",m_drivetrain.getLeftEncoder());
         SmartDashboard.putNumber("angle",desired_heading);
         m_drivetrain.setLeft(leftPower);
         m_drivetrain.setRight(rightPower);

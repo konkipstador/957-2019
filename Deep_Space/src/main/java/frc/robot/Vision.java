@@ -1,6 +1,9 @@
 package frc.robot;
 
-import edu.wpi.first.networktables.*;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Vision {
 
@@ -26,6 +29,7 @@ public class Vision {
     }
 
     public double getTargetLocation(){
+        SmartDashboard.putNumber("target", m_limelightX.getDouble(0));
         return m_limelightX.getDouble(0);
     }
 

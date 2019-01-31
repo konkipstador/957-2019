@@ -5,35 +5,46 @@ import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-import com.revrobotics.CANSparkMaxLowLevel.ConfigParameter;
+import com.revrobotics.ControlType;
 
-import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-/** 
+/**
  * Class to operate the drivetrain of the robot.
  * 
- * Automatically creates 4 Spark Max objects and master/slaves them together. Has built
- * in arcade drive features and direct commands to set drivetrain speeds, useful for
- * Auto.
+ * Automatically creates 4 Spark Max objects and master/slaves them together.
+ * Has built in arcade drive features and direct commands to set drivetrain
+ * speeds, useful for Auto.
  */
 public class Drivetrain {
 
     //AHRS m_navx = new AHRS(Port.kMXP);
+    Vision m_vision = Vision.getInstance();
 
-    double kp = 0.0001;
-    double ki = 0;
-    double kd = 0;
+    public double vkP = 5e-5,
+    vkI = 1e-6,
+    vkD = 0,
+    vkIz = 0, 
+    vkFF = 0, 
+    vkMaxOutput = 1, 
+    vkMinOutput = -1;
+
+    public double kp = 1;
+    public double ki = 0;
+    public double kd = 0;
 
     CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
-    MiniPID c_right = new MiniPID(kp,ki,kd);
+    private CANPIDController m_rightVelocity = m_rightNeoM.getPIDController();
+    private MiniPID m_rightPosition = new MiniPID(kp,ki,kd);
+    
 
     CANSparkMax m_leftNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_leftNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();
-    MiniPID c_left = new MiniPID(kp,ki,kd);
+    private CANPIDController m_leftVelocity = m_leftNeoM.getPIDController();
+    private MiniPID m_leftPosition = new MiniPID(kp,ki,kd);
 
     private static Drivetrain m_drivetrain = null;
 
@@ -51,14 +62,29 @@ public class Drivetrain {
         m_leftNeoS.follow(m_leftNeoM);
 
         // Neo Current Limits
-        //m_rightNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        //m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        //m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        //m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        //m_rightNeoM.setRampRate(0);
-        //m_rightNeoS.setRampRate(0);
-        //m_leftNeoM.setRampRate(0);
-        //m_leftNeoS.setRampRate(0);
+        m_rightNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_rightNeoM.setRampRate(0);
+        m_rightNeoS.setRampRate(0);
+        m_leftNeoM.setRampRate(0);
+        m_leftNeoS.setRampRate(0);
+
+        m_rightVelocity.setP(vkP);
+        m_rightVelocity.setI(vkI);
+        m_rightVelocity.setD(vkD);
+        m_rightVelocity.setIZone(vkIz);
+        m_rightVelocity.setFF(vkFF);
+        m_rightVelocity.setOutputRange(vkMinOutput, vkMaxOutput);
+
+        m_leftVelocity.setP(vkP);
+        m_leftVelocity.setI(vkI);
+        m_leftVelocity.setD(vkD);
+        m_leftVelocity.setIZone(vkIz);
+        m_leftVelocity.setFF(vkFF);
+        m_leftVelocity.setOutputRange(vkMinOutput, vkMaxOutput);
+    
     }
 
     /** Used to grabe a singleton instance of the Drivetrain that is syncronized. */
@@ -72,8 +98,6 @@ public class Drivetrain {
     public void resetEncoders(){
         m_rightEncoderOffset = (int)m_rightEncoder.getPosition();
         m_leftEncoderOffset = (int)m_leftEncoder.getPosition();
-        c_left.reset();
-        c_right.reset();
     }
 
     public void resetNavX(){
@@ -96,31 +120,57 @@ public class Drivetrain {
 
     /** Arcade Drive command for TeleOp driving. */
     public void arcadeDrive(double speed, double turn){
-        if(speed > -.1 && speed < .1)
+        speed = speed-0.05;
+        if(speed > -.05 && speed < .05)
             speed = 0;
-        if(turn > -.1 && turn < .1)
+        if(turn > -.05 && turn < .05)
             turn = 0;
 
-        double left = bound(-1,1, speed);
-        double right = bound(-1,1,speed);
+        double left = bound(-1,1, speed+turn);
+        double right = bound(-1,1,speed-turn);
 
-        SmartDashboard.putNumber("leftValue", left);
-        SmartDashboard.putNumber("rightValue", right);
+        SmartDashboard.putNumber("left", left);
 
-        
-        double leftSpeed = c_left.getOutput(m_leftEncoder.getVelocity(), left*6000);
-        double rightSpeed = c_right.getOutput(m_rightEncoder.getVelocity(), right*6000);
+        m_rightVelocity.setReference(right*5800, ControlType.kVelocity);
+        m_leftVelocity.setReference(-left*5800, ControlType.kVelocity);
 
-        SmartDashboard.putNumber("leftSpeed", leftSpeed);
-        SmartDashboard.putNumber("rightSpeed", rightSpeed);
+        SmartDashboard.putNumber("left encoder", m_leftEncoder.getPosition());
+        SmartDashboard.putNumber("right encoder", m_rightEncoder.getPosition());
 
+        c_visionLoop.reset();
 
-        setLeft(leftSpeed);
-        setRight(rightSpeed);
-        SmartDashboard.putNumber("rpm l", m_leftEncoder.getVelocity());
-        SmartDashboard.putNumber("rpm r", m_rightEncoder.getVelocity());
     }
 
+    double v_vkp = 0.02;
+    double v_vki = 0.;
+    double v_vkd = 0;
+    MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
+
+    public void target(){
+
+        double target = m_vision.getTargetLocation();
+
+        double speed = c_visionLoop.getOutput(target, 0);
+
+        m_rightVelocity.setReference((-speed-0.2)*2400, ControlType.kVelocity);
+        m_leftVelocity.setReference((-speed+0.2)*2400, ControlType.kVelocity);
+
+        SmartDashboard.putNumber("left rpm", m_leftEncoder.getVelocity());
+        SmartDashboard.putNumber("right rpm", m_rightEncoder.getVelocity());
+    }
+
+    public void driveToPosition(double target){
+
+        double power = m_leftPosition.getOutput(-getEncoder(), target);
+
+        //setLeft(-power);
+        //setRight(power);
+        
+        SmartDashboard.putNumber("left rpm", m_leftEncoder.getPosition());
+        SmartDashboard.putNumber("right rpm", m_rightEncoder.getPosition());
+    }
+
+    /** Bounds the input based on custom bounding logic. */
     private double bound(double lowerBound, double upperBound, double input){
         if(input > upperBound)
             return upperBound;
@@ -132,7 +182,7 @@ public class Drivetrain {
 
     /** Returns the left encoder value. */
     public int getLeftEncoder(){
-        return (int)(m_leftEncoder.getPosition()+m_leftEncoderOffset);
+        return (int)(m_leftEncoder.getPosition()-m_leftEncoderOffset);
     }
 
     /** Returns the right encoder value. */
@@ -142,7 +192,7 @@ public class Drivetrain {
     
     /**  Returns the average left and right encoder values */
     public double getEncoder(){
-        return Math.round((getRightEncoder() + getLeftEncoder()) / 2);
+        return Math.round((getRightEncoder() - getLeftEncoder()) / 2);
     }
 
     public double[] getTemp(){

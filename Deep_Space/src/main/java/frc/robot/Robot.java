@@ -66,7 +66,8 @@ public class Robot extends TimedRobot {
     }
 
     public void autonomousPeriodic() {
-        m_pathweaver.runPath(0);
+        //m_pathweaver.runPath(0);
+        m_drivetrain.driveToPosition(0.464*36);
     }
 
     public void teleopInit() {
@@ -75,11 +76,13 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
         
-        m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(0));
-
         
         
-            
+        if(m_joystick.getRawButton(1)){
+            m_drivetrain.target();
+        }else{
+            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), -m_joystick.getRawAxis(0));       
+        }
     }
 
     public void testInit() {
