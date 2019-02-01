@@ -29,7 +29,7 @@ public class Robot extends TimedRobot {
     Pathweaver m_pathweaver = Pathweaver.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
-    //HatchFramework m_hatchGrabber = new Claw();
+    HatchFramework m_hatchGrabber = new Claw();
     Joystick m_joystick = new Joystick(0);
 
     /** Elevator: Low Port/Floor */
@@ -75,9 +75,7 @@ public class Robot extends TimedRobot {
 
     public void teleopPeriodic() {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
-        
-        
-        
+
         if(m_joystick.getRawButton(1)){
             m_drivetrain.target();
         }else{
@@ -85,14 +83,8 @@ public class Robot extends TimedRobot {
         }
     }
 
-    public void testInit() {
+    public void disabledInit(){
+        m_drivetrain.setLeft(0);
+        m_drivetrain.setRight(0);
     }
-
-    public void testPeriodic() {
-    }
-
-    public void setState(){
-
-    }
-
 }

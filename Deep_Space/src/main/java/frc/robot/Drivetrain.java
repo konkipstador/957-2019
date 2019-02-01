@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ControlType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.libraries.MiniPID;
 
 /**
  * Class to operate the drivetrain of the robot.
@@ -29,22 +30,19 @@ public class Drivetrain {
     vkMaxOutput = 1, 
     vkMinOutput = -1;
 
-    public double kp = 1;
-    public double ki = 0;
-    public double kd = 0;
+    
 
     CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
     private CANPIDController m_rightVelocity = m_rightNeoM.getPIDController();
-    private MiniPID m_rightPosition = new MiniPID(kp,ki,kd);
+    
     
 
     CANSparkMax m_leftNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_leftNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();
     private CANPIDController m_leftVelocity = m_leftNeoM.getPIDController();
-    private MiniPID m_leftPosition = new MiniPID(kp,ki,kd);
 
     private static Drivetrain m_drivetrain = null;
 
@@ -159,15 +157,19 @@ public class Drivetrain {
         SmartDashboard.putNumber("right rpm", m_rightEncoder.getVelocity());
     }
 
+    public double kp = 0.05;
+    public double ki = 0;
+    public double kd = 0;
+    private MiniPID m_driveLoop = new MiniPID(kp,ki,kd);
+
     public void driveToPosition(double target){
 
-        double power = m_leftPosition.getOutput(-getEncoder(), target);
+        double power = m_driveLoop.getOutput(getEncoder(), target);
 
-        //setLeft(-power);
+        //setLeft(power);
         //setRight(power);
         
-        SmartDashboard.putNumber("left rpm", m_leftEncoder.getPosition());
-        SmartDashboard.putNumber("right rpm", m_rightEncoder.getPosition());
+        SmartDashboard.putNumber("encoder", getEncoder());
     }
 
     /** Bounds the input based on custom bounding logic. */
