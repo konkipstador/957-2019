@@ -21,7 +21,8 @@ public class RobotState{
         return m_state;
     }
 
+
     public enum State{
-        GRAB_CARGO, GRAB_HATCH, PLACE_PANEL, CARGO_CS, CARGO_ROCKET
+        GRAB_CARGO, GRAB_HATCH, PLACE_PANEL, CARGO_CS, CARGO_ROCKET, PASSTHROUGH;
     }
 }

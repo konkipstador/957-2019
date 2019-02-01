@@ -9,7 +9,7 @@ public class Elevator {
 
 	RobotState m_robotState = RobotState.getInstance();
 
-	TalonSRX elevator = new TalonSRX(6);
+	TalonSRX elevator = new TalonSRX(5);
 	int m_targetPosition = 0;
 	LiftLevels m_targetLevel = LiftLevels.GROUND;
 
