@@ -1,8 +1,6 @@
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.RobotState.State;
@@ -22,6 +20,8 @@ public class EsCargo {
 
     DigitalInput m_breakBeam1 = new DigitalInput(1);
     DigitalInput m_breakBeam2 = new DigitalInput(2);
+
+    State m_lastTarget = State.CARGO_ROCKET;
 
     public EsCargo(){
 
@@ -52,6 +52,10 @@ public class EsCargo {
             if(m_breakBeam2.get()){
                 m_robotState.setState(State.GRAB_HATCH);
             }
+        }
+
+        if(m_robotState.state() == State.CARGO_ROCKET){
+            m_lastTarget = State.CARGO_ROCKET;
         }
     }
 

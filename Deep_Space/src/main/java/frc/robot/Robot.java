@@ -79,7 +79,7 @@ public class Robot extends TimedRobot {
         if(m_joystick.getRawButton(1)){
             m_drivetrain.target();
         }else{
-            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), -m_joystick.getRawAxis(0));       
+            m_elevator.drive(m_joystick.getRawAxis(1));       
         }
     }
 

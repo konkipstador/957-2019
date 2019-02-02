@@ -30,15 +30,11 @@ public class Drivetrain {
     vkMaxOutput = 1, 
     vkMinOutput = -1;
 
-    
-
     CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoM.getEncoder();
     private CANPIDController m_rightVelocity = m_rightNeoM.getPIDController();
     
-    
-
     CANSparkMax m_leftNeoM = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_leftNeoS = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_leftEncoder = m_leftNeoM.getEncoder();

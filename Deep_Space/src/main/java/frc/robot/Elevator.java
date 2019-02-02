@@ -19,6 +19,8 @@ public class Elevator {
 	double kf = 0;
 	int k_cruise = 0;
 	int k_accel = 0;
+
+	int granular = 0;
 	
 	private static Elevator m_elevatorSystem;	// Synchronized Elevator object
 
@@ -44,6 +46,11 @@ public class Elevator {
         elevator.config_kD(0, kd, 20);
 		elevator.config_kF(0, kf, 20);
 	}
+
+	public void drive(double value){
+		elevator.set(ControlMode.PercentOutput, -value);
+		System.out.println(elevator.getSelectedSensorVelocity());
+	}
 	
 	/** Sets the elevator position.
 	 * @param level: LiftLevels value storing elevator level information.
@@ -52,6 +59,14 @@ public class Elevator {
 		m_targetLevel = level;
 		m_targetPosition = level.encoderPosition();
 		elevator.set(ControlMode.MotionMagic, m_targetPosition);
+	}
+
+	public void granular(double toAdd){
+		granular = granular + (int)(1*toAdd);
+		if(granular < 0){
+			granular = 0;
+		}
+		elevator.set(ControlMode.MotionMagic, granular);
 	}
 
 	/** @return LiftLevels object storing elevator level information. */
