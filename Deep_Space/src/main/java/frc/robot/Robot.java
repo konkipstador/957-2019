@@ -10,6 +10,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Elevator.LiftLevels;
 import frc.robot.Pathweaver.Path;
 import frc.robot.RobotState.State;
 import frc.robot.hatch_mechanisms.Claw;
@@ -77,14 +78,21 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
 
         if(m_joystick.getRawButton(1)){
-            m_drivetrain.target();
-        }else{
-            m_elevator.drive(m_joystick.getRawAxis(1));       
+            m_elevator.setLevel(LiftLevels.GROUND);
+        }
+
+        if(m_joystick.getRawButton(2)){
+            m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
+        }
+
+        if(m_joystick.getRawButton(3)){
+            m_elevator.setLevel(LiftLevels.PORT_HIGH);
         }
     }
 
     public void disabledInit(){
         m_drivetrain.setLeft(0);
         m_drivetrain.setRight(0);
+        m_elevator.reset();
     }
 }
