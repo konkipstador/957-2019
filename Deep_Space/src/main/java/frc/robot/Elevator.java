@@ -76,7 +76,15 @@ public class Elevator {
 
 	/** @return Maximum allowed drivetrain speed. Varies based on height. */
 	public double maximumDriveSpeed() {
-		return 1;
+		if(m_targetLevel.encoderPosition() > 18000){
+			return 2600;
+		}
+
+		if(m_targetLevel.encoderPosition() > 12000){
+			return 4200;
+		}
+
+		return 5800;
 	}
 
 	/** @return Returns a synchronized m_elevator object. */

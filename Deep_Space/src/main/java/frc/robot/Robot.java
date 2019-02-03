@@ -63,7 +63,6 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         m_drivetrain.resetEncoders();
         m_drivetrain.resetNavX();
-
     }
 
     public void autonomousPeriodic() {
@@ -77,6 +76,7 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
 
+        /** 
         if(m_joystick.getRawButton(1)){
             m_elevator.setLevel(LiftLevels.GROUND);
         }
@@ -88,11 +88,34 @@ public class Robot extends TimedRobot {
         if(m_joystick.getRawButton(3)){
             m_elevator.setLevel(LiftLevels.PORT_HIGH);
         }
+        */
+
+        if(m_robotState.state() == State.GRAB_HATCH){
+
+        }
+
+        if(m_robotState.state() == State.GRAB_CARGO){
+            
+        }
+
+        if(m_robotState.state() == State.PASSTHROUGH){
+            
+        }
+
+        if(m_robotState.state() == State.PLACE_PANEL){
+            
+        }
+
+        if(m_robotState.state() == State.PLACE_CARGO){
+            
+        }
     }
 
     public void disabledInit(){
         m_drivetrain.setLeft(0);
         m_drivetrain.setRight(0);
         m_elevator.reset();
+
+        SmartDashboard.putString("data", m_joystick.getName());
     }
 }

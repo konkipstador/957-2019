@@ -21,8 +21,6 @@ public class EsCargo {
     DigitalInput m_breakBeam1 = new DigitalInput(1);
     DigitalInput m_breakBeam2 = new DigitalInput(2);
 
-    State m_lastTarget = State.CARGO_ROCKET;
-
     public EsCargo(){
 
     }
@@ -41,21 +39,17 @@ public class EsCargo {
             inPassthrough();
             
             if(!m_breakBeam2.get()){
-                m_robotState.setState(State.CARGO_ROCKET);
+                m_robotState.setState(State.PLACE_CARGO);
             }
         }
 
-        if(m_robotState.state() == State.CARGO_ROCKET || m_robotState.state() == State.CARGO_CS){
+        if(m_robotState.state() == State.PLACE_CARGO){
 
             m_grabbing.set(0);
 
             if(m_breakBeam2.get()){
                 m_robotState.setState(State.GRAB_HATCH);
             }
-        }
-
-        if(m_robotState.state() == State.CARGO_ROCKET){
-            m_lastTarget = State.CARGO_ROCKET;
         }
     }
 

@@ -21,6 +21,7 @@ public class Drivetrain {
 
     //AHRS m_navx = new AHRS(Port.kMXP);
     Vision m_vision = Vision.getInstance();
+    Elevator m_elevator = Elevator.getInstance();
 
     public double vkP = 5e-5,
     vkI = 1e-6,
@@ -47,6 +48,7 @@ public class Drivetrain {
 
     double m_rightEncoderOffset = 0;
     double m_leftEncoderOffset = 0;
+
     /**
      * Drivetrain constructor, which is called automatically when an instance of the
      * drivetrain is asked for. You should not call directly.
@@ -112,24 +114,26 @@ public class Drivetrain {
         m_rightNeoM.set(rightSpeed);
     }
 
+    private double deadzone(double input, double deadzone){     
+        if(input > -deadzone && input < deadzone)
+            return 0;
+        return input;
+    }
+
     /** Arcade Drive command for TeleOp driving. */
     public void arcadeDrive(double speed, double turn){
         speed = speed-0.05;
-        if(speed > -.05 && speed < .05)
-            speed = 0;
-        if(turn > -.05 && turn < .05)
-            turn = 0;
 
-        double left = bound(-1,1, speed+turn);
-        double right = bound(-1,1,speed-turn);
+        double deadzoneSpeed = deadzone(speed, 0.5);
+        double deadzoneTurn = deadzone(turn, 0.5);
+
+        double left = bound(-1,1, deadzoneSpeed+deadzoneTurn);
+        double right = bound(-1,1,deadzoneSpeed+deadzoneTurn);
 
         SmartDashboard.putNumber("left", left);
 
-        m_rightVelocity.setReference(right*5800, ControlType.kVelocity);
-        m_leftVelocity.setReference(-left*5800, ControlType.kVelocity);
-
-        SmartDashboard.putNumber("left encoder", m_leftEncoder.getPosition());
-        SmartDashboard.putNumber("right encoder", m_rightEncoder.getPosition());
+        m_rightVelocity.setReference(right*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+        m_leftVelocity.setReference(-left*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
 
         c_visionLoop.reset();
 
@@ -141,16 +145,12 @@ public class Drivetrain {
     MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
 
     public void target(){
-
         double target = m_vision.getTargetLocation();
 
         double speed = c_visionLoop.getOutput(target, 0);
 
         m_rightVelocity.setReference((-speed-0.2)*2400, ControlType.kVelocity);
         m_leftVelocity.setReference((-speed+0.2)*2400, ControlType.kVelocity);
-
-        SmartDashboard.putNumber("left rpm", m_leftEncoder.getVelocity());
-        SmartDashboard.putNumber("right rpm", m_rightEncoder.getVelocity());
     }
 
     public double kp = 0.05;
@@ -194,9 +194,6 @@ public class Drivetrain {
     }
 
     public double[] getTemp(){
-        SmartDashboard.putNumber("Power Draw R", m_rightNeoM.getOutputCurrent());
-        SmartDashboard.putNumber("Power Draw L", m_leftNeoM.getOutputCurrent());
-        return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};
-        
+        return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};      
     }
 }
