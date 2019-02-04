@@ -21,6 +21,15 @@ public class EsCargo {
     DigitalInput m_breakBeam1 = new DigitalInput(1);
     DigitalInput m_breakBeam2 = new DigitalInput(2);
 
+    private static EsCargo m_cargo;
+    
+    /** Syncronized Signleton creator. */
+    public static synchronized EsCargo getInstance(){
+        if (m_cargo == null)
+            m_cargo = new EsCargo();
+        return m_cargo;
+    }
+
     public EsCargo(){
 
     }

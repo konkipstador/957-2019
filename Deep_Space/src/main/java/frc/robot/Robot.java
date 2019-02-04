@@ -31,6 +31,7 @@ public class Robot extends TimedRobot {
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
     HatchFramework m_hatchGrabber = new Claw();
+    EsCargo m_cargoSystem = EsCargo.getInstance();
     Joystick m_joystick = new Joystick(0);
 
     /** Elevator: Low Port/Floor */
@@ -76,25 +77,40 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
 
-        /** 
-        if(m_joystick.getRawButton(1)){
-            m_elevator.setLevel(LiftLevels.GROUND);
-        }
-
-        if(m_joystick.getRawButton(2)){
-            m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
-        }
-
-        if(m_joystick.getRawButton(3)){
-            m_elevator.setLevel(LiftLevels.PORT_HIGH);
-        }
-        */
-
         if(m_robotState.state() == State.GRAB_HATCH){
+
+            if(m_autoState){
+
+                // TODO: Autonomus panel grabbing
+
+
+                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
+                    m_autoState = false;
+                }
+
+            }else{
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
+                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                }
+
+                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button()) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
+                    m_autoState = true;
+                }
+
+                if(m_joystick.getRawButtonReleased(Buttons.TARGET_SWAP.button()) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
+                    m_elevator.setLevel(LiftLevels.PORT_LOW);
+                    m_robotState.setState(State.GRAB_CARGO);
+                }
+            }      
 
         }
 
         if(m_robotState.state() == State.GRAB_CARGO){
+
+            if(m_joystick.getRawButtonReleased(Buttons.TARGET_SWAP.button())){
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                m_robotState.setState(State.GRAB_HATCH);
+            }
             
         }
 
@@ -103,11 +119,62 @@ public class Robot extends TimedRobot {
         }
 
         if(m_robotState.state() == State.PLACE_PANEL){
+
+            if(m_autoState){
+
+                // TODO: Autonomus panel placement
+
+
+                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
+                    m_autoState = false;
+                }
+
+            }else{
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
+                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                }
+    
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_MID.button())){
+                    m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
+                }
+    
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_HIGH.button())){
+                    m_elevator.setLevel(LiftLevels.HATCH_HIGH);
+                }
+
+                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
+                    m_autoState = true;
+                }
+            }     
             
+            m_cargoSystem.run();
         }
 
         if(m_robotState.state() == State.PLACE_CARGO){
+
+            if(m_autoState){
+
+                // TODO: Autonomus cargo placement
+
+
+                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
+                    m_autoState = false;
+                }
+
+            }else{
             
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
+                    m_elevator.setLevel(LiftLevels.PORT_LOW);
+                }
+
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_MID.button())){
+                    m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
+                }
+
+                if(m_joystick.getRawButton(Buttons.ELEVATOR_HIGH.button())){
+                    m_elevator.setLevel(LiftLevels.PORT_HIGH);
+                }
+            }
         }
     }
 
@@ -117,5 +184,23 @@ public class Robot extends TimedRobot {
         m_elevator.reset();
 
         SmartDashboard.putString("data", m_joystick.getName());
+    }
+
+    public enum Buttons{
+        ELEVATOR_LOW(2), ELEVATOR_MID(7), ELEVATOR_HIGH(8), ELEVATOR_CARGO(4), AUTOMATED_ACTION(1), 
+        TARGET_SWAP(3), MANUAL_RETRACT(6), MANUAL_GRAB(5), MANUAL_PASS(11), SHOOT(12), CLIMB(8);
+
+        private final int m_button;
+	
+		// Enum structure constructor
+		private Buttons(int button) { 
+			m_button = button;
+		} 
+	
+		// Get the m_elevator level that is target
+		public int button() 
+		{ 
+			return m_button;
+		} 
     }
 }
