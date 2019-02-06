@@ -77,8 +77,7 @@ public class Pathweaver {
     /** Runs the indicated path. Returns true if the path is completed, returns false otherwise. */
     public boolean runPath(int pathNumber){
         if(m_right_followers.get(pathNumber).isFinished()){
-            m_drivetrain.setLeft(0);
-            m_drivetrain.setRight(0);
+            m_drivetrain.tank(0,0);
             return true;
         }
 
@@ -93,8 +92,7 @@ public class Pathweaver {
         System.out.println();
         SmartDashboard.putNumber("encoder",m_drivetrain.getLeftEncoder());
         SmartDashboard.putNumber("angle",desired_heading);
-        m_drivetrain.setLeft(leftPower);
-        m_drivetrain.setRight(rightPower);
+        m_drivetrain.tank(leftPower,rightPower);
         return false;
     }
 

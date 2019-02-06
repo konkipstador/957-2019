@@ -34,23 +34,6 @@ public class Robot extends TimedRobot {
     EsCargo m_cargoSystem = EsCargo.getInstance();
     Joystick m_joystick = new Joystick(0);
 
-    /** Elevator: Low Port/Floor */
-    int k_button1 = 1;
-    /** Elevator: Medium Port */ 
-    int k_button2 = 2;
-    /** Elevator: High Port */
-    int k_button3 = 2;
-    /** Swap between Cargo and Hatch grabbing OR switch target between Rocket and Cargo Ship */
-    int k_button4 = 3;
-    /** Perform automated action or cancel automated action */
-    int k_button5 = 2;
-    /** Actuate leapfrog */
-    int k_button6 = 1;
-    /** Change claw grab state OR manually shoot cargo */
-    int k_button7 = 6;
-    /** Extend claw beyond bumpers OR run passthrough manually */
-    int k_button8 = 7; 
-
     boolean m_autoState = false;
 
     Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
@@ -67,8 +50,7 @@ public class Robot extends TimedRobot {
     }
 
     public void autonomousPeriodic() {
-        //m_pathweaver.runPath(0);
-        m_drivetrain.driveToPosition(0.464*36);
+
     }
 
     public void teleopInit() {
@@ -114,7 +96,7 @@ public class Robot extends TimedRobot {
             
         }
 
-        if(m_robotState.state() == State.PASSTHROUGH){
+        if(m_robotState.state() == State.PASSTHROUGH || m_robotState.state() == State.CARGO_ALIGNMENT){
             
         }
 
@@ -179,16 +161,18 @@ public class Robot extends TimedRobot {
     }
 
     public void disabledInit(){
-        m_drivetrain.setLeft(0);
-        m_drivetrain.setRight(0);
+        m_drivetrain.tank(0,0);
         m_elevator.reset();
-
-        SmartDashboard.putString("data", m_joystick.getName());
     }
 
     public enum Buttons{
         ELEVATOR_LOW(2), ELEVATOR_MID(7), ELEVATOR_HIGH(8), ELEVATOR_CARGO(4), AUTOMATED_ACTION(1), 
         TARGET_SWAP(3), MANUAL_RETRACT(6), MANUAL_GRAB(5), MANUAL_PASS(11), SHOOT(12), CLIMB(8);
+
+        // 4 Positions on Cargo Placement
+        // Autonomus Enable/Disable button
+        // Manual Functions: Retract, Grab, Run Passthrough, Shoot (Nav Controller?)
+        // Climbing
 
         private final int m_button;
 	

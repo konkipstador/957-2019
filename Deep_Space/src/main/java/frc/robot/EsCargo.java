@@ -20,6 +20,7 @@ public class EsCargo {
 
     DigitalInput m_breakBeam1 = new DigitalInput(1);
     DigitalInput m_breakBeam2 = new DigitalInput(2);
+    DigitalInput m_breakBeam3 = new DigitalInput(3);
 
     private static EsCargo m_cargo;
     
@@ -48,7 +49,16 @@ public class EsCargo {
             inPassthrough();
             
             if(!m_breakBeam2.get()){
+                m_robotState.setState(State.CARGO_ALIGNMENT);
+            }
+        }
+
+        if(m_robotState.state() == State.CARGO_ALIGNMENT){
+            alignCargo();
+            
+            if(m_breakBeam2.get()){
                 m_robotState.setState(State.PLACE_CARGO);
+                stop();
             }
         }
 
@@ -56,7 +66,7 @@ public class EsCargo {
 
             m_grabbing.set(0);
 
-            if(m_breakBeam2.get()){
+            if(m_breakBeam3.get()){
                 m_robotState.setState(State.GRAB_HATCH);
             }
         }
@@ -72,6 +82,11 @@ public class EsCargo {
         m_arm1.set(false);
         m_arm2.set(false);
         m_grabbing.set(1);
+    }
+
+    private void alignCargo(){
+        m_shooting1.set(0.25);
+        m_shooting2.set(0.25);
     }
 
     public void placeCargo(){

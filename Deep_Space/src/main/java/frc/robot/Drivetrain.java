@@ -105,13 +105,18 @@ public class Drivetrain {
     }
 
     /** Set the speeds of the left motors. */
-    public void setLeft(double leftSpeed){
-        m_leftNeoM.set(-leftSpeed);
-    }
+    public void tank(double leftSpeed, double rightSpeed){
 
-    /** Set the speeds of the right motors. */
-    public void setRight(double rightSpeed){
-        m_rightNeoM.set(rightSpeed);
+        double deadzoneLeft = deadzone(leftSpeed, 0.5);
+        double deadzoneRight = deadzone(rightSpeed, 0.5);
+
+        double left = bound(-1,1, deadzoneLeft);
+        double right = bound(-1,1,deadzoneRight);
+
+        m_rightVelocity.setReference(right*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+        m_leftVelocity.setReference(-left*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+
+        c_visionLoop.reset();
     }
 
     private double deadzone(double input, double deadzone){     
@@ -130,13 +135,10 @@ public class Drivetrain {
         double left = bound(-1,1, deadzoneSpeed+deadzoneTurn);
         double right = bound(-1,1,deadzoneSpeed+deadzoneTurn);
 
-        SmartDashboard.putNumber("left", left);
-
         m_rightVelocity.setReference(right*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
         m_leftVelocity.setReference(-left*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
 
         c_visionLoop.reset();
-
     }
 
     double v_vkp = 0.02;
@@ -151,21 +153,6 @@ public class Drivetrain {
 
         m_rightVelocity.setReference((-speed-0.2)*2400, ControlType.kVelocity);
         m_leftVelocity.setReference((-speed+0.2)*2400, ControlType.kVelocity);
-    }
-
-    public double kp = 0.05;
-    public double ki = 0;
-    public double kd = 0;
-    private MiniPID m_driveLoop = new MiniPID(kp,ki,kd);
-
-    public void driveToPosition(double target){
-
-        double power = m_driveLoop.getOutput(getEncoder(), target);
-
-        //setLeft(power);
-        //setRight(power);
-        
-        SmartDashboard.putNumber("encoder", getEncoder());
     }
 
     /** Bounds the input based on custom bounding logic. */

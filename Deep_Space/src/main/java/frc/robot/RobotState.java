@@ -23,6 +23,6 @@ public class RobotState{
 
 
     public enum State{
-        GRAB_CARGO, GRAB_HATCH, PLACE_PANEL, PLACE_CARGO, PASSTHROUGH;
+        GRAB_CARGO, GRAB_HATCH, PLACE_PANEL, PLACE_CARGO, PASSTHROUGH, CARGO_ALIGNMENT;
     }
 }
