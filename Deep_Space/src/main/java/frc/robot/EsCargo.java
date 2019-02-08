@@ -9,6 +9,7 @@ public class EsCargo {
 
     RobotState m_robotState = RobotState.getInstance();
 
+    // Objects for Talons, Solenoids, and Break Beams.
     WPI_TalonSRX m_grabbing = new WPI_TalonSRX(6);
     WPI_TalonSRX m_shooting1 = new WPI_TalonSRX(7);
     WPI_TalonSRX m_shooting2 = new WPI_TalonSRX(8);
