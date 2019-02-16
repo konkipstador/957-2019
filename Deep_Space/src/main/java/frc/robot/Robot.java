@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Elevator.LiftLevels;
 import frc.robot.Pathweaver.Path;
 import frc.robot.RobotState.State;
-import frc.robot.hatch_mechanisms.Claw;
-import frc.robot.hatch_mechanisms.HatchFramework;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -30,139 +28,193 @@ public class Robot extends TimedRobot {
     Pathweaver m_pathweaver = Pathweaver.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
-    HatchFramework m_hatchGrabber = new Claw();
     EsCargo m_cargoSystem = EsCargo.getInstance();
     Joystick m_joystick = new Joystick(0);
+
 
     boolean m_autoState = false;
 
     Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
+
+    int m_autoPhase = 0;
     
     public void robotInit() {      
-        m_pathweaver.loadPath(m_autoPath);
-        m_robotState.setState(State.GRAB_HATCH);
+        //m_pathweaver.loadPath(m_autoPath);
+        m_robotState.setState(State.GRAB_HATCH);       
         
     }
 
     public void autonomousInit() {
-        m_drivetrain.resetEncoders();
-        m_drivetrain.resetNavX();
+        //m_drivetrain.resetEncoders();
+        //m_drivetrain.resetNavX();
+        m_autoPhase = 0;
     }
 
+    
+
     public void autonomousPeriodic() {
+
+        m_elevator.drive(m_joystick.getRawAxis(1));
+        /**Scrimmage Auto Rocket
+
+        switch(m_autoPhase){
+
+            case 0:
+                if(m_drivetrain.driveTo(60,0)){
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+            case 1:
+                if(m_drivetrain.turnTo(61.7)){
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+            case 2:
+                if(m_drivetrain.driveTo(83,61.7)){
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+            case 3:
+                if(m_vision.getTargetLocation() == -1000){
+                    m_drivetrain.driveStraight(28.6,0.2);
+                }else{
+                    m_drivetrain.target();
+                }
+                if(m_drivetrain.getRPM() < 5){
+                    m_drivetrain.tank(0,0);
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+            case 4:
+                if(m_drivetrain.driveTo(-83,61.7)){
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+            case 5:
+                if(m_drivetrain.turnTo(168.6)){
+                    m_autoPhase++;
+                    m_drivetrain.resetEncoders();
+                }
+                break;
+
+            case 6:
+
+                break;
+        }
+        */
 
     }
 
     public void teleopInit() {
     }
 
+    int pressState = 0;
     public void teleopPeriodic() {
-        SmartDashboard.putNumber("Temperatures", m_drivetrain.getTemp()[0]);
 
-        if(m_robotState.state() == State.GRAB_HATCH){
+        //m_drivetrain.arcadeDrive(-m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
 
-            if(m_autoState){
+        // Switch statement controlling what object the robot is grabbing
+        switch(pressState){
+            case 0:
 
-                // TODO: Autonomus panel grabbing
+                m_robotState.setState(State.PLACE_PANEL);
+                if(m_joystick.getRawButton(3) && m_elevator.getRaw() < 10)
+                    pressState = 1;
+                break;
 
+            case 1:
 
-                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
-                    m_autoState = false;
-                }
+                if(!m_joystick.getRawButton(3))
+                    pressState = 2;
+                break;
 
-            }else{
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
-                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                }
+            case 2:
 
-                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button()) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
-                    m_autoState = true;
-                }
+                m_robotState.setState(State.GRAB_CARGO);
+                if(m_joystick.getRawButton(3) && m_robotState.state() == State.GRAB_CARGO)
+                    pressState = 3;
+                break;
 
-                if(m_joystick.getRawButtonReleased(Buttons.TARGET_SWAP.button()) && m_elevator.getLevel() == LiftLevels.HATCH_LOW){
-                    m_elevator.setLevel(LiftLevels.PORT_LOW);
-                    m_robotState.setState(State.GRAB_CARGO);
-                }
-            }      
+            case 3:
 
-        }
-
-        if(m_robotState.state() == State.GRAB_CARGO){
-
-            if(m_joystick.getRawButtonReleased(Buttons.TARGET_SWAP.button())){
-                m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                m_robotState.setState(State.GRAB_HATCH);
-            }
-            
-        }
-
-        if(m_robotState.state() == State.PASSTHROUGH || m_robotState.state() == State.CARGO_ALIGNMENT){
-            
+                if(!m_joystick.getRawButton(3))
+                    pressState = 0;
+                break;
         }
 
         if(m_robotState.state() == State.PLACE_PANEL){
 
-            if(m_autoState){
+            if(m_joystick.getRawButton(7))
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
 
-                // TODO: Autonomus panel placement
+            if(m_joystick.getRawButton(9))
+                m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
 
+            if(m_joystick.getRawButton(11))
+                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
 
-                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
-                    m_autoState = false;
-                }
+            if(m_joystick.getPOV(0) == 0){
+                m_elevator.granular(1);
+            }
 
-            }else{
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
-                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                }
-    
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_MID.button())){
-                    m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
-                }
-    
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_HIGH.button())){
-                    m_elevator.setLevel(LiftLevels.HATCH_HIGH);
-                }
+            if(m_joystick.getPOV(0) == 180){
+                m_elevator.granular(-1);
+            }
 
-                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
-                    m_autoState = true;
-                }
-            }     
-            
-            m_cargoSystem.run();
+            if(m_joystick.getRawButton(1)){
+                m_elevator.place();
+            }
+
+            if(m_joystick.getRawButton(2)){
+                m_elevator.grab();
+            }
         }
 
         if(m_robotState.state() == State.PLACE_CARGO){
 
-            if(m_autoState){
+            if(m_joystick.getRawButton(1))
+                m_cargoSystem.placeCargo();      
 
-                // TODO: Autonomus cargo placement
+            if(m_joystick.getRawButton(7))
+                m_elevator.setLevel(LiftLevels.PORT_LOW);
 
+            if(m_joystick.getRawButton(8))
+                m_elevator.setLevel(LiftLevels.PORT_CARGO_SHIP);
 
-                if(m_joystick.getRawButtonReleased(Buttons.AUTOMATED_ACTION.button())){
-                    m_autoState = false;
-                }
+            if(m_joystick.getRawButton(9))
+                m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
 
-            }else{
-            
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_LOW.button())){
-                    m_elevator.setLevel(LiftLevels.PORT_LOW);
-                }
+            if(m_joystick.getRawButton(11))
+                m_elevator.setLevel(LiftLevels.PORT_HIGH);
 
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_MID.button())){
-                    m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
-                }
+            if(m_joystick.getPOV(0) == 0){
+                m_elevator.granular(1);
+            }
 
-                if(m_joystick.getRawButton(Buttons.ELEVATOR_HIGH.button())){
-                    m_elevator.setLevel(LiftLevels.PORT_HIGH);
-                }
+            if(m_joystick.getPOV(0) == 180){
+                m_elevator.granular(-1);
             }
         }
+
+        m_cargoSystem.run();
+        m_elevator.run();
     }
 
     public void disabledInit(){
         m_drivetrain.tank(0,0);
         m_elevator.reset();
+    }
+
+    /** Instrum Code */
+    public void robotPeriodic(){
+        SmartDashboard.putNumber("Gyro", m_drivetrain.getAngle());
+        SmartDashboard.putNumber("Elevator Position", m_elevator.getRaw());
+        SmartDashboard.putNumber("Arm Position", m_cargoSystem.getArmPosition());  
     }
 
     public enum Buttons{

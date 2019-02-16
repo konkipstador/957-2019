@@ -1,22 +1,29 @@
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Solenoid;
+import frc.libraries.MiniPID;
 import frc.robot.RobotState.State;
 
 public class EsCargo {
+    
+    double kp = 1.27;
+    double ki = 0;
+    double kd = 0;
+    double kf = 0.682;
+
+    Position m_armState = Position.UP;
 
     RobotState m_robotState = RobotState.getInstance();
 
-    WPI_TalonSRX m_grabbing = new WPI_TalonSRX(6);
-    WPI_TalonSRX m_shooting1 = new WPI_TalonSRX(7);
+    WPI_TalonSRX m_grabbing = new WPI_TalonSRX(7);
+    WPI_TalonSRX m_shooting1 = new WPI_TalonSRX(9);
     WPI_TalonSRX m_shooting2 = new WPI_TalonSRX(8);
-
-    Solenoid m_arm1 = new Solenoid(3);
-    Solenoid m_arm2 = new Solenoid(4);
-
-    boolean m_armState = false;
+    TalonSRX m_arm = new TalonSRX(6);
 
     DigitalInput m_breakBeam1 = new DigitalInput(1);
     DigitalInput m_breakBeam2 = new DigitalInput(2);
@@ -32,10 +39,18 @@ public class EsCargo {
     }
 
     public EsCargo(){
-
+        m_arm.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);     
+        m_arm.setSelectedSensorPosition(0);
+        m_arm.setSensorPhase(true);
+        m_arm.config_kP(0, kp);
+        m_arm.config_kI(0, ki);
+        m_arm.config_kD(0, kd);
+        m_arm.config_kF(0, kf);
+        m_arm.configMotionCruiseVelocity(1500);
+        m_arm.configMotionAcceleration(1500);  
     }
 
-    public void run(){
+    public void run(){      
         
         if(m_robotState.state() == State.GRAB_CARGO){
             grabbing();
@@ -47,6 +62,7 @@ public class EsCargo {
         
         if(m_robotState.state() == State.PASSTHROUGH){
             inPassthrough();
+            alignCargo();
             
             if(!m_breakBeam2.get()){
                 m_robotState.setState(State.CARGO_ALIGNMENT);
@@ -56,31 +72,31 @@ public class EsCargo {
         if(m_robotState.state() == State.CARGO_ALIGNMENT){
             alignCargo();
             
-            if(m_breakBeam2.get()){
+            if(m_breakBeam2.get() && !m_breakBeam3.get()){
                 m_robotState.setState(State.PLACE_CARGO);
                 stop();
             }
         }
 
         if(m_robotState.state() == State.PLACE_CARGO){
-
+            
             m_grabbing.set(0);
 
             if(m_breakBeam3.get()){
                 m_robotState.setState(State.GRAB_HATCH);
             }
         }
+
+        m_arm.set(ControlMode.PercentOutput,m_armState.getPosition());
     }
 
     private void grabbing(){
-        m_arm1.set(true);
-        m_arm2.set(true);
+        m_armState = Position.DOWN;
         m_grabbing.set(1);
     }
 
     private void inPassthrough(){
-        m_arm1.set(false);
-        m_arm2.set(false);
+        m_armState = Position.UP;
         m_grabbing.set(1);
     }
 
@@ -97,5 +113,23 @@ public class EsCargo {
     public void stop(){
         m_shooting1.set(0);
         m_shooting2.set(0);
+    }
+
+    public int getArmPosition(){
+        return m_arm.getSelectedSensorPosition(0);
+    }
+
+    public enum Position{
+        UP(0), DOWN(17000);
+
+        int tickValue;
+
+        private Position(int tickValue){
+            this.tickValue = tickValue;
+        }
+
+        public int getPosition(){
+            return tickValue;
+        }
     }
 }

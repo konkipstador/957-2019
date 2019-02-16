@@ -1,13 +1,13 @@
 package frc.robot;
 
-//import com.kauailabs.navx.frc.AHRS;
+import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ControlType;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.I2C.Port;
 import frc.libraries.MiniPID;
 
 /**
@@ -19,7 +19,7 @@ import frc.libraries.MiniPID;
  */
 public class Drivetrain {
 
-    //AHRS m_navx = new AHRS(Port.kMXP);
+    AHRS m_navx = new AHRS(Port.kMXP);
     Vision m_vision = Vision.getInstance();
     Elevator m_elevator = Elevator.getInstance();
 
@@ -30,6 +30,11 @@ public class Drivetrain {
     vkFF = 0, 
     vkMaxOutput = 1, 
     vkMinOutput = -1;
+
+    double v_vkp = 0.02;
+    double v_vki = 0.;
+    double v_vkd = 0;
+    MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
 
     CANSparkMax m_rightNeoM = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoS = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -49,6 +54,8 @@ public class Drivetrain {
     double m_rightEncoderOffset = 0;
     double m_leftEncoderOffset = 0;
 
+    double m_magicNumber = 0;
+
     /**
      * Drivetrain constructor, which is called automatically when an instance of the
      * drivetrain is asked for. You should not call directly.
@@ -62,10 +69,6 @@ public class Drivetrain {
         m_rightNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
         m_leftNeoM.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
         m_leftNeoS.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_rightNeoM.setRampRate(0);
-        m_rightNeoS.setRampRate(0);
-        m_leftNeoM.setRampRate(0);
-        m_leftNeoS.setRampRate(0);
 
         m_rightVelocity.setP(vkP);
         m_rightVelocity.setI(vkI);
@@ -83,7 +86,7 @@ public class Drivetrain {
     
     }
 
-    /** Used to grabe a singleton instance of the Drivetrain that is syncronized. */
+    /** Used to grab a singleton instance of the Drivetrain that is syncronized. */
     public static synchronized Drivetrain getInstance(){
         if (m_drivetrain == null)
             m_drivetrain = new Drivetrain();
@@ -91,17 +94,33 @@ public class Drivetrain {
         return m_drivetrain;     
     }
 
-    public void resetEncoders(){
-        m_rightEncoderOffset = (int)m_rightEncoder.getPosition();
-        m_leftEncoderOffset = (int)m_leftEncoder.getPosition();
+    public double scale(double input, double deadzone){
+
+        double value = 0;
+        if(input > deadzone){
+            value = (input - deadzone)*(1/(1-deadzone));
+        }else if(input < -deadzone){
+            value = (input + deadzone)*(1/(1-deadzone));
+        }else{
+            value = 0;
+        }
+
+        return value;
     }
 
-    public void resetNavX(){
-        //m_navx.reset();
-    }
+    /** Arcade Drive command for TeleOp driving. */
+    public void arcadeDrive(double speed, double turn){
 
-    public double getAngle(){
-        return 0;
+        double deadzoneSpeed = scale(speed, 0.2);
+        double deadzoneTurn = scale(turn, 0.2);
+
+        double left = bound(-1,1, deadzoneSpeed+deadzoneTurn);
+        double right = bound(-1,1,deadzoneSpeed+deadzoneTurn);
+
+        m_rightVelocity.setReference(right*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+        m_leftVelocity.setReference(-left*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+
+        c_visionLoop.reset();
     }
 
     /** Set the speeds of the left motors. */
@@ -119,33 +138,56 @@ public class Drivetrain {
         c_visionLoop.reset();
     }
 
-    private double deadzone(double input, double deadzone){     
-        if(input > -deadzone && input < deadzone)
-            return 0;
-        return input;
+    // _____AUTO FUNCTIONS_____   
+    /** Drives to a distance while maintaning an angle */
+    public boolean driveTo(double inches, double angle){
+
+        inches = inches * m_magicNumber;
+        double turn = c_visionLoop.getOutput(getAngle(), angle);
+        double speed = 0.75;
+
+        if(Math.abs(m_drivetrain.getEncoder()) > inches - 30){
+            speed = 0.25;
+        }
+
+        if(inches < 0){
+            m_rightVelocity.setReference((-turn+speed)*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+            m_leftVelocity.setReference((-turn-speed)*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+
+        }else{
+            m_rightVelocity.setReference((-turn-speed)*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+            m_leftVelocity.setReference((-turn+speed)*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
+        }     
+
+        if(Math.abs(m_drivetrain.getEncoder()) > inches - 1){
+            tank(0,0);
+            return true;
+        }
+        return false;
     }
 
-    /** Arcade Drive command for TeleOp driving. */
-    public void arcadeDrive(double speed, double turn){
-        speed = speed-0.05;
+    /** Turns the robot to an angle */
+    public boolean turnTo(double angle){
+        double turn = c_visionLoop.getOutput(getAngle(), angle);
+        m_rightVelocity.setReference(-turn*2400, ControlType.kVelocity);
+        m_leftVelocity.setReference(-turn*2400, ControlType.kVelocity);
 
-        double deadzoneSpeed = deadzone(speed, 0.5);
-        double deadzoneTurn = deadzone(turn, 0.5);
-
-        double left = bound(-1,1, deadzoneSpeed+deadzoneTurn);
-        double right = bound(-1,1,deadzoneSpeed+deadzoneTurn);
-
-        m_rightVelocity.setReference(right*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
-        m_leftVelocity.setReference(-left*m_elevator.maximumDriveSpeed(), ControlType.kVelocity);
-
-        c_visionLoop.reset();
+        if(getAngle() > angle - 1 && getAngle() < angle + 1){
+            tank(0,0);
+            return true;
+        }
+        return false;
     }
 
-    double v_vkp = 0.02;
-    double v_vki = 0.;
-    double v_vkd = 0;
-    MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
+    /** Drives the robot straight without incorperating a distance */    
+    public void driveStraight(double angle, double speed){
+        double turn = c_visionLoop.getOutput(getAngle(), angle);
 
+        m_rightVelocity.setReference((-turn-speed)*2400, ControlType.kVelocity);
+        m_leftVelocity.setReference((-turn+speed)*2400, ControlType.kVelocity);
+    }
+
+    /** Drives towards a vision target */
     public void target(){
         double target = m_vision.getTargetLocation();
 
@@ -153,6 +195,55 @@ public class Drivetrain {
 
         m_rightVelocity.setReference((-speed-0.2)*2400, ControlType.kVelocity);
         m_leftVelocity.setReference((-speed+0.2)*2400, ControlType.kVelocity);
+    }
+
+    /** Returns the velocity of the drive motors */
+    public double getRPM(){
+        return Math.abs(m_leftEncoder.getVelocity() + m_rightEncoder.getVelocity())/2;
+    }
+
+    /** Resets the encoders */
+    public void resetEncoders(){
+        m_rightEncoderOffset = (int)m_rightEncoder.getPosition();
+        m_leftEncoderOffset = (int)m_leftEncoder.getPosition();
+    }
+
+    /** Resets the gyro */
+    public void resetNavX(){
+        m_navx.reset();
+    }
+
+    /** Returns the angle of the robot */
+    public double getAngle(){
+        return m_navx.getAngle();
+    }
+
+    /** Returns the left encoder value. */
+    public double getLeftEncoder(){
+        return (m_leftEncoder.getPosition()-m_leftEncoderOffset);
+    }
+
+    /** Returns the right encoder value. */
+    public double getRightEncoder(){
+        return (m_rightEncoder.getPosition()-m_rightEncoderOffset);
+    }   
+    
+    /**  Returns the average left and right encoder values */
+    public double getEncoder(){
+        return Math.round((getRightEncoder() - getLeftEncoder()) / 2);
+    }
+
+    /** Returns the temperature of the drive motors */
+    public double[] getTemp(){
+        return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};      
+    }
+
+    // _____MATH FUNCTIONS_____
+    /** Deadzones an input */
+    private double deadzone(double input, double deadzone){     
+        if(input > -deadzone && input < deadzone)
+            return 0;
+        return input;
     }
 
     /** Bounds the input based on custom bounding logic. */
@@ -163,24 +254,5 @@ public class Drivetrain {
             return lowerBound;
 
         return input;
-    }
-
-    /** Returns the left encoder value. */
-    public int getLeftEncoder(){
-        return (int)(m_leftEncoder.getPosition()-m_leftEncoderOffset);
-    }
-
-    /** Returns the right encoder value. */
-    public int getRightEncoder(){
-        return (int)(m_rightEncoder.getPosition()-m_rightEncoderOffset);
-    }   
-    
-    /**  Returns the average left and right encoder values */
-    public double getEncoder(){
-        return Math.round((getRightEncoder() - getLeftEncoder()) / 2);
-    }
-
-    public double[] getTemp(){
-        return new double[]{m_leftNeoM.getMotorTemperature(), m_rightNeoM.getMotorTemperature()};      
     }
 }

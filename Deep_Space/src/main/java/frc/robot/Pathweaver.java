@@ -1,9 +1,6 @@
 package frc.robot;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.PathfinderFRC;
@@ -16,7 +13,7 @@ public class Pathweaver {
     public Drivetrain m_drivetrain = Drivetrain.getInstance();  // Grabbing encoder values from drivetrain
 
     // PATHFINDER CONSTANTS
-    private static final int k_ticks_per_rev = 365;
+    private static final int k_ticks_per_rev = 42;
     private static final double k_wheel_diameter = 6/12;
     private static final double k_max_velocity = 5;
     private static final double kp = 1;
@@ -81,8 +78,8 @@ public class Pathweaver {
             return true;
         }
 
-        double leftPower = m_left_followers.get(pathNumber).calculate(-m_drivetrain.getLeftEncoder());
-        double rightPower = m_right_followers.get(pathNumber).calculate(m_drivetrain.getRightEncoder());
+        double leftPower = m_left_followers.get(pathNumber).calculate((int)(-m_drivetrain.getLeftEncoder()*42));
+        double rightPower = m_right_followers.get(pathNumber).calculate((int)(m_drivetrain.getRightEncoder()*42));
 
         double heading = m_drivetrain.getAngle();
         double desired_heading = Pathfinder.r2d(m_left_followers.get(pathNumber).getHeading());
