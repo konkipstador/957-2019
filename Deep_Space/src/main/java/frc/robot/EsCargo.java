@@ -83,6 +83,7 @@ public class EsCargo {
             m_grabbing.set(0);
 
             if(m_breakBeam3.get()){
+
                 m_robotState.setState(State.PLACE_PANEL);
             }
         }else{
@@ -97,8 +98,6 @@ public class EsCargo {
             }
             
         }
-
-        
 
        m_arm.set(ControlMode.MotionMagic,m_armState.getPosition());
     }
