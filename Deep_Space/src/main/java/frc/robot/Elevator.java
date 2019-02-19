@@ -56,13 +56,12 @@ public class Elevator {
 	/** Function used to test the elevator with a joystick. */
 	public void granular(double input){
 		m_targetPosition = m_targetPosition + input/6;
-		if(m_position < 0.6){
+		if(m_targetPosition < 0.6){
 			m_targetPosition = 0.6;
 		}
-		if(m_position > 78){
-			m_targetPosition = 78;
+		if(m_targetPosition > 82){
+			m_targetPosition = 82;
 		}
-		m_pidController.setReference(m_position, ControlType.kSmartMotion);
 		SmartDashboard.putNumber("pos", m_encoder.getPosition());
 		SmartDashboard.putNumber("tg", m_position);
 	}
@@ -110,15 +109,15 @@ public class Elevator {
 
 	/** @return Maximum allowed drivetrain speed. Varies based on height. */
 	public double maximumDriveSpeed() {
-		if(m_targetLevel.encoderPosition() > 50){
-			return 2600;
+		if(m_encoder.getPosition() > 50){
+			return 0.2;
 		}
 
-		if(m_targetLevel.encoderPosition() > 30){
-			return 4200;
+		if(m_encoder.getPosition() > 20){
+			return 0.5;
 		}
 
-		return 5800;
+		return 1;
 	}
 
 	/** @return Returns a synchronized m_elevator object. */
@@ -133,9 +132,9 @@ public class Elevator {
 	public enum LiftLevels{
     
 		// Levels of the hatch ports
-		HATCH_LOW(0.6), HATCH_MEDIUM(30), HATCH_HIGH(60),
+		HATCH_LOW(0.6), HATCH_MEDIUM(40), HATCH_HIGH(82),
 		// Levels of the cargo ports
-		PORT_LOW(0.6), PORT_CARGO_SHIP(0), PORT_MEDIUM(0), PORT_HIGH(0),
+		PORT_LOW(0.6), PORT_CARGO_SHIP(40), PORT_MEDIUM(40), PORT_HIGH(82),
 		// Other Levels
 		GROUND(0.6);
 		

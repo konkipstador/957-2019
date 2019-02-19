@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -21,7 +23,7 @@ import frc.robot.RobotState.State;
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends TimedRobot {
+public class Robot extends IterativeRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
     Elevator m_elevator = Elevator.getInstance();
@@ -31,83 +33,31 @@ public class Robot extends TimedRobot {
     EsCargo m_cargoSystem = EsCargo.getInstance();
     Joystick m_joystick = new Joystick(0);
 
+    //VL53L0X m_distance = new VL53L0X(6);
 
     boolean m_autoState = false;
 
-    Path[] m_autoPath = new Path[]{Path.ROCKET_RIGHT_1, Path.ROCKET_RIGHT_2, Path.ROCKET_RIGHT_3};
+    Path[] m_autoPath = new Path[]{Path.FCS1, Path.FCS2, Path.FCS3};
 
     int m_autoPhase = 0;
     
     public void robotInit() {      
-        //m_pathweaver.loadPath(m_autoPath);
-        m_robotState.setState(State.GRAB_HATCH);       
+        m_pathweaver.loadPath(m_autoPath);
+        m_robotState.setState(State.PLACE_PANEL);       
         
     }
 
     public void autonomousInit() {
-        //m_drivetrain.resetEncoders();
-        //m_drivetrain.resetNavX();
+        m_drivetrain.resetEncoders();
+        m_drivetrain.resetNavX();
         m_autoPhase = 0;
     }
 
     
 
     public void autonomousPeriodic() {
-
-        m_elevator.drive(m_joystick.getRawAxis(1));
-        /**Scrimmage Auto Rocket
-
-        switch(m_autoPhase){
-
-            case 0:
-                if(m_drivetrain.driveTo(60,0)){
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-            case 1:
-                if(m_drivetrain.turnTo(61.7)){
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-            case 2:
-                if(m_drivetrain.driveTo(83,61.7)){
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-            case 3:
-                if(m_vision.getTargetLocation() == -1000){
-                    m_drivetrain.driveStraight(28.6,0.2);
-                }else{
-                    m_drivetrain.target();
-                }
-                if(m_drivetrain.getRPM() < 5){
-                    m_drivetrain.tank(0,0);
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-            case 4:
-                if(m_drivetrain.driveTo(-83,61.7)){
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-            case 5:
-                if(m_drivetrain.turnTo(168.6)){
-                    m_autoPhase++;
-                    m_drivetrain.resetEncoders();
-                }
-                break;
-
-            case 6:
-
-                break;
-        }
-        */
-
+        //m_pathweaver.runPath(0);
+        m_cargoSystem.drive(m_joystick.getRawAxis(1));
     }
 
     public void teleopInit() {
@@ -116,37 +66,49 @@ public class Robot extends TimedRobot {
     int pressState = 0;
     public void teleopPeriodic() {
 
-        //m_drivetrain.arcadeDrive(-m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
+        if(m_joystick.getRawButton(4)) 
+            m_drivetrain.target();
+        
+        
+        m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
 
         // Switch statement controlling what object the robot is grabbing
         switch(pressState){
             case 0:
-
-                m_robotState.setState(State.PLACE_PANEL);
+                pressState = 0;
                 if(m_joystick.getRawButton(3) && m_elevator.getRaw() < 10)
                     pressState = 1;
                 break;
 
             case 1:
+                
+                pressState = 1;
 
-                if(!m_joystick.getRawButton(3))
+                if(!m_joystick.getRawButton(3)){
                     pressState = 2;
+                    m_robotState.setState(State.GRAB_CARGO);
+                }
                 break;
 
             case 2:
 
-                m_robotState.setState(State.GRAB_CARGO);
-                if(m_joystick.getRawButton(3) && m_robotState.state() == State.GRAB_CARGO)
+                pressState = 2;
+                
+                if(m_joystick.getRawButton(3))
                     pressState = 3;
                 break;
 
             case 3:
 
-                if(!m_joystick.getRawButton(3))
+                pressState = 3;
+                
+                if(!m_joystick.getRawButton(3)){
                     pressState = 0;
+                    m_robotState.setState(State.PLACE_PANEL);
+                }
                 break;
         }
-
+        
         if(m_robotState.state() == State.PLACE_PANEL){
 
             if(m_joystick.getRawButton(7))
@@ -172,6 +134,10 @@ public class Robot extends TimedRobot {
 
             if(m_joystick.getRawButton(2)){
                 m_elevator.grab();
+            }
+
+            if(m_joystick.getRawButton(12)){
+                m_cargoSystem.placeCargo();
             }
         }
 
@@ -210,33 +176,16 @@ public class Robot extends TimedRobot {
         m_elevator.reset();
     }
 
+    
+
     /** Instrum Code */
     public void robotPeriodic(){
         SmartDashboard.putNumber("Gyro", m_drivetrain.getAngle());
         SmartDashboard.putNumber("Elevator Position", m_elevator.getRaw());
         SmartDashboard.putNumber("Arm Position", m_cargoSystem.getArmPosition());  
-    }
 
-    public enum Buttons{
-        ELEVATOR_LOW(2), ELEVATOR_MID(7), ELEVATOR_HIGH(8), ELEVATOR_CARGO(4), AUTOMATED_ACTION(1), 
-        TARGET_SWAP(3), MANUAL_RETRACT(6), MANUAL_GRAB(5), MANUAL_PASS(11), SHOOT(12), CLIMB(8);
-
-        // 4 Positions on Cargo Placement
-        // Autonomus Enable/Disable button
-        // Manual Functions: Retract, Grab, Run Passthrough, Shoot (Nav Controller?)
-        // Climbing
-
-        private final int m_button;
-	
-		// Enum structure constructor
-		private Buttons(int button) { 
-			m_button = button;
-		} 
-	
-		// Get the m_elevator level that is target
-		public int button() 
-		{ 
-			return m_button;
-		} 
+        SmartDashboard.putBoolean("b1", m_cargoSystem.get1());
+        SmartDashboard.putBoolean("b2", m_cargoSystem.get2());
+        SmartDashboard.putBoolean("b3", m_cargoSystem.get3()); 
     }
 }

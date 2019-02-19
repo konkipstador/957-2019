@@ -13,10 +13,10 @@ public class Pathweaver {
     public Drivetrain m_drivetrain = Drivetrain.getInstance();  // Grabbing encoder values from drivetrain
 
     // PATHFINDER CONSTANTS
-    private static final int k_ticks_per_rev = 42;
+    private static final int k_ticks_per_rev = 365;
     private static final double k_wheel_diameter = 6/12;
-    private static final double k_max_velocity = 5;
-    private static final double kp = 1;
+    private static final double k_max_velocity = 30;
+    private static final double kp = 0.5;
     private static final double ki = 0;
     private static final double kd = 0;
     private static final double ka = 0;
@@ -86,7 +86,8 @@ public class Pathweaver {
         double heading_difference = Pathfinder.boundHalfDegrees(desired_heading - heading);
         double turn =  0.8 * (-1.0/80.0) * heading_difference;
 
-        System.out.println();
+        
+
         SmartDashboard.putNumber("encoder",m_drivetrain.getLeftEncoder());
         SmartDashboard.putNumber("angle",desired_heading);
         m_drivetrain.tank(leftPower,rightPower);
@@ -95,7 +96,7 @@ public class Pathweaver {
 
     /** Enum to promote readability of auto paths. */
     public enum Path{
-        ROCKET_RIGHT_1("RightRocket1"), ROCKET_RIGHT_2("RightRocket2"), ROCKET_RIGHT_3("RightRocket3");
+        FCS1("FrontCargoShip1"), FCS2("FrontCargoShip2"), FCS3("FrontCargoShip3");
 
         // Placeholder variables for the Enumerator structure
         private final String m_pathName;

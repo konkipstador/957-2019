@@ -25,9 +25,11 @@ public class EsCargo {
     WPI_TalonSRX m_shooting2 = new WPI_TalonSRX(8);
     TalonSRX m_arm = new TalonSRX(6);
 
-    DigitalInput m_breakBeam1 = new DigitalInput(1);
-    DigitalInput m_breakBeam2 = new DigitalInput(2);
-    DigitalInput m_breakBeam3 = new DigitalInput(3);
+    DigitalInput m_breakBeam1 = new DigitalInput(2);
+    DigitalInput m_breakBeam2 = new DigitalInput(1);
+    DigitalInput m_breakBeam3 = new DigitalInput(0);
+
+    boolean ps = false;
 
     private static EsCargo m_cargo;
     
@@ -38,16 +40,20 @@ public class EsCargo {
         return m_cargo;
     }
 
+    public void drive(double input){
+        m_arm.set(ControlMode.PercentOutput, input);
+    }
+
     public EsCargo(){
         m_arm.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);     
         m_arm.setSelectedSensorPosition(0);
-        m_arm.setSensorPhase(true);
+        m_arm.setSensorPhase(false);
         m_arm.config_kP(0, kp);
         m_arm.config_kI(0, ki);
         m_arm.config_kD(0, kd);
         m_arm.config_kF(0, kf);
         m_arm.configMotionCruiseVelocity(1500);
-        m_arm.configMotionAcceleration(1500);  
+        m_arm.configMotionAcceleration(3000);  
     }
 
     public void run(){      
@@ -58,36 +64,49 @@ public class EsCargo {
             if(!m_breakBeam1.get()){
                 m_robotState.setState(State.PASSTHROUGH);
             }
-        }
-        
-        if(m_robotState.state() == State.PASSTHROUGH){
+        }else if(m_robotState.state() == State.PASSTHROUGH){
             inPassthrough();
             alignCargo();
             
             if(!m_breakBeam2.get()){
                 m_robotState.setState(State.CARGO_ALIGNMENT);
             }
-        }
-
-        if(m_robotState.state() == State.CARGO_ALIGNMENT){
+        }else if(m_robotState.state() == State.CARGO_ALIGNMENT){
             alignCargo();
             
             if(m_breakBeam2.get() && !m_breakBeam3.get()){
                 m_robotState.setState(State.PLACE_CARGO);
                 stop();
             }
-        }
-
-        if(m_robotState.state() == State.PLACE_CARGO){
+        }else if(m_robotState.state() == State.PLACE_CARGO){
             
             m_grabbing.set(0);
 
             if(m_breakBeam3.get()){
-                m_robotState.setState(State.GRAB_HATCH);
+                m_robotState.setState(State.PLACE_PANEL);
             }
+        }else{
+            m_armState = Position.UP;
+            m_grabbing.set(0);
+
+            if(!ps){
+                m_shooting1.set(0);
+                m_shooting2.set(0);
+            }else{
+                ps = false;
+            }
+            
         }
 
-        m_arm.set(ControlMode.PercentOutput,m_armState.getPosition());
+        
+
+       m_arm.set(ControlMode.MotionMagic,m_armState.getPosition());
+    }
+
+    public void runPassthrough(double input){
+        m_grabbing.set(-1*input);
+        m_shooting1.set(1*input);
+        m_shooting2.set(-1*input);
     }
 
     private void grabbing(){
@@ -101,12 +120,13 @@ public class EsCargo {
     }
 
     private void alignCargo(){
-        m_shooting1.set(0.25);
-        m_shooting2.set(0.25);
+        m_shooting1.set(-0.15);
+        m_shooting2.set(0.15);
     }
 
     public void placeCargo(){
-        m_shooting1.set(0.5);
+        ps = true;
+        m_shooting1.set(-0.5);
         m_shooting2.set(0.5);
     }
 
@@ -119,8 +139,20 @@ public class EsCargo {
         return m_arm.getSelectedSensorPosition(0);
     }
 
+    public boolean get1(){
+        return m_breakBeam1.get();
+    }
+
+    public boolean get2(){
+        return m_breakBeam2.get();
+    }
+
+    public boolean get3(){
+        return m_breakBeam3.get();
+    }
+
     public enum Position{
-        UP(0), DOWN(17000);
+        UP(0), DOWN(-21250);
 
         int tickValue;
 
