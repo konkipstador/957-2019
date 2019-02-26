@@ -13,7 +13,7 @@ public class Elevator {
 
 	RobotState m_robotState = RobotState.getInstance();
 	double m_targetPosition = 0;
-	LiftLevels m_targetLevel = LiftLevels.GROUND;
+	LiftLevels m_targetLevel = LiftLevels.HATCH_LOW;
 	
 	CANSparkMax m_spark = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
 	CANEncoder m_encoder = m_spark.getEncoder();
@@ -28,6 +28,8 @@ public class Elevator {
     int maxVel = 4500;
 	double maxAcc = 3500;
 	
+	double grabHeight = 0;
+
 	double m_position = 0;
 	boolean m_placing = false;
 	
@@ -75,22 +77,40 @@ public class Elevator {
 		m_pidController.setReference(level.encoderPosition(), ControlType.kSmartMotion);
 	}
 
+
 	public void run(){
-		m_pidController.setReference(m_targetPosition, ControlType.kSmartMotion);
+
+		double finalPosition = 0;
+
+		if(m_targetPosition < 0.6){
+			m_targetPosition = 0.6;
+		}
+		if(m_targetPosition > 81){
+			m_targetPosition = 81;
+		}
+
+		if(m_placing){
+			finalPosition = m_targetPosition + 5;
+		}else{
+			finalPosition = m_targetPosition;
+		}
+
+		if(finalPosition < 0.6){
+			finalPosition = 0.6;
+		}
+		if(finalPosition > 81){
+			finalPosition = 81;
+		}
+		m_pidController.setReference(finalPosition, ControlType.kSmartMotion);
 	}
 
 	public void place(){
-		if(m_placing == false){
-			m_pidController.setReference(m_targetLevel.encoderPosition()-1, ControlType.kSmartMotion);
-			m_placing = true;
-		}	
+		m_placing = false;
 	}
 
 	public void grab(){
-		if(m_placing == true){
-			m_pidController.setReference(m_targetLevel.encoderPosition(), ControlType.kSmartMotion);
-			m_placing = false;
-		}	
+		grabHeight = m_encoder.getPosition();
+		m_placing = true;
 	}
 
 	public void reset(){
@@ -132,7 +152,7 @@ public class Elevator {
 	public enum LiftLevels{
     
 		// Levels of the hatch ports
-		HATCH_LOW(0.6), HATCH_MEDIUM(40), HATCH_HIGH(82),
+		HATCH_LOW(0.6), HATCH_MEDIUM(40), HATCH_HIGH(76),
 		// Levels of the cargo ports
 		PORT_LOW(0.6), PORT_CARGO_SHIP(40), PORT_MEDIUM(40), PORT_HIGH(82),
 		// Other Levels

@@ -1,20 +1,13 @@
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.ExternalFollower;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDSource;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.libraries.MiniPID;
 
 /**
@@ -35,20 +28,18 @@ public class Drivetrain {
     double kD = 0;
     double kF = 0;
 
-    double v_vkp = 0.02;
+    double v_vkp = 0.03;
     double v_vki = 0.;
     double v_vkd = 0;
     MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
 
-    TalonSRX m_rightDM = new TalonSRX(11);
     CANSparkMax m_rightNeoMaster = new CANSparkMax(3, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANSparkMax m_rightNeoSlave = new CANSparkMax(4, CANSparkMaxLowLevel.MotorType.kBrushless);
     CANEncoder m_rightEncoder = m_rightNeoMaster.getEncoder();
     
-    TalonSRX m_leftDM = new TalonSRX(10);
-    CANSparkMax m_leftDS1 = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANSparkMax m_leftDS2 = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
-    CANEncoder m_leftEncoder = m_leftDS1.getEncoder();
+    CANSparkMax m_leftNeoMaster = new CANSparkMax(1, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANSparkMax m_leftNeoSlave = new CANSparkMax(2, CANSparkMaxLowLevel.MotorType.kBrushless);
+    CANEncoder m_leftEncoder = m_leftNeoMaster.getEncoder();
 
     private static Drivetrain m_drivetrain = null;
 
@@ -58,8 +49,6 @@ public class Drivetrain {
     double m_rightEncoderOffset = 0;
     double m_leftEncoderOffset = 0;
 
-    FeedbackDevice talon = FeedbackDevice.SoftwareEmulatedSensor;
-
     double m_magicNumber = 0;
 
     /**
@@ -67,74 +56,22 @@ public class Drivetrain {
      * drivetrain is asked for. You should not call directly.
      */
     public Drivetrain(){
-        m_rightNeoMaster.follow(ExternalFollower.kFollowerPhoenix, 11);
-        m_rightNeoSlave.follow(ExternalFollower.kFollowerPhoenix, 11);
-
-        m_leftDS1.follow(ExternalFollower.kFollowerPhoenix, 10);
-        m_leftDS2.follow(ExternalFollower.kFollowerPhoenix, 10);
-        
+        m_rightNeoSlave.follow(m_rightNeoMaster);
+        m_leftNeoSlave.follow(m_leftNeoMaster);
+            
         m_rightNeoMaster.setIdleMode(IdleMode.kCoast);
         m_rightNeoSlave.setIdleMode(IdleMode.kCoast);
-        m_leftDS1.setIdleMode(IdleMode.kCoast);
-        m_leftDS2.setIdleMode(IdleMode.kCoast);
+        m_leftNeoMaster.setIdleMode(IdleMode.kCoast);
+        m_leftNeoSlave.setIdleMode(IdleMode.kCoast);
         //m_leftNeoS.setInverted(true);
 
         // Neo Current Limits
         m_rightNeoMaster.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
         m_rightNeoSlave.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_leftDS1.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
-        m_leftDS2.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_leftNeoMaster.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
+        m_leftNeoSlave.setSmartCurrentLimit(k_stallCurrentLimit, k_freeCurrentLimit);
 
-        /** 
-		m_rightVelocity.setP(kP);
-		m_rightVelocity.setI(kI);
-		m_rightVelocity.setD(kD);
-		m_rightVelocity.setIZone(kIz);
-		m_rightVelocity.setFF(kFF);
-		m_rightVelocity.setSmartMotionMaxVelocity(maxVel, 0);
-		m_rightVelocity.setSmartMotionMinOutputVelocity(0, 0);
-		m_rightVelocity.setSmartMotionMaxAccel(maxAcc,0);
-        m_rightVelocity.setOutputRange(-1, 1);	
-        m_rightVelocity.setSmartMotionAccelStrategy(AccelStrategy.kSCurve, 0);
-        m_rightNeoM.setClosedLoopRampRate(0.5);
-        m_rightVelocity.setSmartMotionAllowedClosedLoopError(1, 0);
-        	
-        m_leftVelocity.setP(kP);
-		m_leftVelocity.setI(kI);
-		m_leftVelocity.setD(kD);
-		m_leftVelocity.setIZone(kIz);
-		m_leftVelocity.setFF(kFF);
-		m_leftVelocity.setSmartMotionMaxVelocity(maxVel, 0);
-		m_leftVelocity.setSmartMotionMinOutputVelocity(0, 0);
-		m_leftVelocity.setSmartMotionMaxAccel(maxAcc,0);
-        m_leftVelocity.setOutputRange(-1, 1);
-        m_leftVelocity.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0);
-        m_leftNeoM.setClosedLoopRampRate(.5);
-        m_leftVelocity.setSmartMotionAllowedClosedLoopError(1, 0);
-         */
-
-        double kp = 0;
-        double ki = 0;
-        double kd = 0;
-        double kf = .00000000000000000001;
-        int cruise = 0;
-        int accel = 0;
-
-        m_leftDM.config_kP(0, kp);
-        m_leftDM.config_kI(0, ki);
-        m_leftDM.config_kD(0, kd);
-        m_leftDM.config_kF(0, kf);
-        m_leftDM.configMotionCruiseVelocity(0, cruise);
-        m_leftDM.configMotionAcceleration(0, accel);
-
-        m_rightDM.config_kP(0, kp);
-        m_rightDM.config_kI(0, ki);
-        m_rightDM.config_kD(0, kd);
-        m_rightDM.config_kF(0, kf);
-        m_rightDM.configMotionCruiseVelocity(0, cruise);
-        m_rightDM.configMotionAcceleration(0, accel);
-        
-    
+        c_visionLoop.setOutputLimits(-.5,.5);
     }
 
     /** Used to grab a singleton instance of the Drivetrain that is syncronized. */
@@ -197,10 +134,8 @@ public class Drivetrain {
         double left = bound(-1,1, outputD-turn);
         double right = bound(-1,1,outputD+turn);
 
-        m_rightDM.set(ControlMode.PercentOutput, right*m_elevator.maximumDriveSpeed());
-        m_leftDM.set(ControlMode.PercentOutput, -left*m_elevator.maximumDriveSpeed());
-
-        
+        m_rightNeoMaster.set(right*m_elevator.maximumDriveSpeed());
+        m_leftNeoMaster.set(-left*m_elevator.maximumDriveSpeed());
 
         c_visionLoop.reset();
     }
@@ -208,13 +143,30 @@ public class Drivetrain {
     /** Autonomus driving function. */
     double outputL = 0;
     double outputR = 0;
+    double maxChange = 0.05;
     public void tank(double leftSpeed, double rightSpeed){
 
-        outputL = outputL + (outputL - leftSpeed) * -ramp;
-        outputR = outputR + (outputR - rightSpeed) * -ramp;
+        double l = outputL + (outputL - leftSpeed) * -ramp;
+        double r = outputR + (outputR - rightSpeed) * -ramp;
 
-        m_rightDM.set(ControlMode.PercentOutput, outputR*m_elevator.maximumDriveSpeed());
-        m_leftDM.set(ControlMode.PercentOutput, -outputL*m_elevator.maximumDriveSpeed());
+        if(l > outputL + maxChange){
+            outputL = outputL + maxChange;
+        }else if(l < outputL - maxChange){
+            outputL = outputL - maxChange;
+        }else{
+            outputL = l;
+        }
+
+        if(r > outputR + maxChange){
+            outputR = outputR + maxChange;
+        }else if(r < outputR - maxChange){
+            outputR = outputR - maxChange;
+        }else{
+            outputR = r;
+        }
+
+        m_rightNeoMaster.set(outputR*m_elevator.maximumDriveSpeed());
+        m_leftNeoMaster.set(-outputL*m_elevator.maximumDriveSpeed());
 
         c_visionLoop.reset();
     }
@@ -231,8 +183,6 @@ public class Drivetrain {
             speed = 0.25;
         }
 
-        
-
         if(Math.abs(m_drivetrain.getEncoder()) > inches - 1){
             tank(0,0);
             return true;
@@ -243,6 +193,8 @@ public class Drivetrain {
     /** Turns the robot to an angle */
     public boolean turnTo(double angle){
         double turn = c_visionLoop.getOutput(getAngle(), angle);
+
+        arcadeDrive(0,-turn);
         
 
         if(getAngle() > angle - 1 && getAngle() < angle + 1){
@@ -260,18 +212,34 @@ public class Drivetrain {
     }
 
     /** Drives towards a vision target */
-    public void target(){
+    public boolean target(double desiredAngle){
         double target = m_vision.getTargetLocation();
+        double turn = 0;
+        double left = 0;
 
-        double speed = c_visionLoop.getOutput(target, 0);
+        if(m_elevator.maximumDriveSpeed() == 0.2){
+            autocade(-.4,target/15*3);
+        }else{
+            autocade(-0.2,target/40);
+        }
+        
+        if(m_leftEncoder.getVelocity() < 100){
+            System.out.println("done");
+            return true;
+        }
+        return false;
+    }
 
-        System.out.println(outputD);
-        double left = bound(-1,1, -speed);
-        double right = bound(-1,1,+speed);
+    public void autocade(double speed, double turn){
 
-        m_rightDM.set(ControlMode.PercentOutput, right*m_elevator.maximumDriveSpeed());
-        m_leftDM.set(ControlMode.PercentOutput, -left*m_elevator.maximumDriveSpeed());
+        outputD = outputD + (outputD - speed) * -ramp;
+        double left = bound(-1,1, outputD-turn);
+        double right = bound(-1,1,outputD+turn);
 
+        m_rightNeoMaster.set(right*m_elevator.maximumDriveSpeed());
+        m_leftNeoMaster.set(-left*m_elevator.maximumDriveSpeed());
+
+        c_visionLoop.reset();
     }
 
     /** Returns the velocity of the drive motors */
@@ -281,8 +249,8 @@ public class Drivetrain {
 
     /** Resets the encoders */
     public void resetEncoders(){
-        m_rightEncoderOffset = (int)m_rightEncoder.getPosition();
-        m_leftEncoderOffset = (int)m_leftEncoder.getPosition();
+        m_rightEncoderOffset = (int)(m_rightEncoder.getPosition());
+        m_leftEncoderOffset = (int)(m_leftEncoder.getPosition());
     }
 
     /** Resets the gyro */
@@ -292,22 +260,24 @@ public class Drivetrain {
 
     /** Returns the angle of the robot */
     public double getAngle(){
-        return m_navx.getAngle();
+        return -m_navx.getAngle();
     }
 
     /** Returns the left encoder value. */
     public double getLeftEncoder(){
-        return (m_leftEncoder.getPosition()-m_leftEncoderOffset);
+        return (int)(m_leftEncoder.getPosition()-m_leftEncoderOffset);
     }
 
     /** Returns the right encoder value. */
     public double getRightEncoder(){
-        return (m_rightEncoder.getPosition()-m_rightEncoderOffset);
+        return (int)(m_rightEncoder.getPosition()-m_rightEncoderOffset);
     }   
     
     /**  Returns the average left and right encoder values */
     public double getEncoder(){
-        return Math.round((getRightEncoder() - getLeftEncoder()) / 2);
+        SmartDashboard.putNumber("Encoder", -Math.round((((getRightEncoder() - getLeftEncoder()) / 2)/365)*5.95*3.14159));
+        return -((getRightEncoder() - getLeftEncoder()) / (2*8.68))*3.14159*5.95;
+        
     }
 
     // _____MATH FUNCTIONS_____

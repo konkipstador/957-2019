@@ -7,13 +7,12 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.libraries.MiniPID;
+import frc.libraries.VL53L0X;
 import frc.robot.Elevator.LiftLevels;
-import frc.robot.Pathweaver.Path;
 import frc.robot.RobotState.State;
 
 /**
@@ -27,50 +26,237 @@ public class Robot extends IterativeRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
     Elevator m_elevator = Elevator.getInstance();
-    Pathweaver m_pathweaver = Pathweaver.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
     EsCargo m_cargoSystem = EsCargo.getInstance();
     Joystick m_joystick = new Joystick(0);
-
-    //VL53L0X m_distance = new VL53L0X(6);
+    //Joystick m_nav = new Joystick(1);
 
     boolean m_autoState = false;
+    VL53L0X sensor1;
 
-    Path[] m_autoPath = new Path[]{Path.FCS1, Path.FCS2, Path.FCS3};
 
     int m_autoPhase = 0;
     
     public void robotInit() {      
-        m_pathweaver.loadPath(m_autoPath);
-        m_robotState.setState(State.PLACE_PANEL);       
+        m_robotState.setState(State.PLACE_PANEL);     
+        m_drivetrain.resetNavX();  
+        try{
+            sensor1 = new VL53L0X(0x29);
+        }catch(Exception e){
+            System.out.println("Sensor failed to initalize.");
+        }
+       
         
     }
 
     public void autonomousInit() {
         m_drivetrain.resetEncoders();
-        m_drivetrain.resetNavX();
+        
         m_autoPhase = 0;
+        m_autoStep = 0;
     }
 
-    
+    int m_autoStep = 0;
+    int ticks = 0;
 
     public void autonomousPeriodic() {
         //m_pathweaver.runPath(0);
-        m_cargoSystem.drive(m_joystick.getRawAxis(1));
+        //m_cargoSystem.drive(m_joystick.getRawAxis(1));
+
+        //m_drivetrain.turnTo(180);
+
+        if(true){
+            switch(m_autoStep){
+                case 0:
+    
+                if(driveForward(0.5, 0, 55,65)){
+                    m_autoStep++;
+                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                    m_elevator.grab();
+                }
+    
+                break;
+    
+                case 1:
+    
+                m_drivetrain.turnTo(-75);
+                if(m_drivetrain.getAngle() < -71){
+                    m_autoStep++;
+                    m_drivetrain.resetEncoders();
+                }
+                    
+                break;
+    
+                case 2:
+    
+                if(driveForward(0.5,-75, 32,37)){
+                    m_autoStep = 3;
+                }
+    
+                break;
+    
+                case 3:
+                    m_drivetrain.turnTo(-30);
+                    if(m_drivetrain.getAngle() > -35){
+                        m_autoStep++;
+                        ticks = 0;
+                    }
+                break;
+    
+                case 4:
+    
+                ticks++;
+    
+                if(m_drivetrain.target(-30) && ticks > 20){
+                    //m_autoStep++;
+                    m_drivetrain.resetEncoders();
+                    m_drivetrain.tank(0,0);
+                    m_elevator.place();
+                }
+    
+    
+                break;
+
+                case 5:
+
+                if(m_drivetrain.getEncoder() > -20){
+                    driveForward(-.65, -30, -80,-100);
+                }else{
+                    if(driveForward(-.7, 20, -115,-130)){
+                        m_autoStep++;
+                        ticks = 0;
+                    }
+                }
+                
+                break;
+
+                case 6:
+
+                ticks++;
+
+                m_drivetrain.turnTo(180);
+                if(m_drivetrain.getAngle() > 178 && ticks > 30){
+                    m_autoStep++;
+                    ticks = 0;
+                }
+
+                break;
+
+                case 7:
+
+                ticks++;
+                if(m_drivetrain.target(0) && ticks > 15){
+                    m_drivetrain.tank(0,0);
+                    m_autoStep++;
+                    m_drivetrain.resetEncoders();
+                }
+
+                break;
+
+                case 8:
+
+                if(driveForward(-.7, 195, -90,-100)){
+                    m_autoStep++;
+                    ticks = 0;
+                }
+
+                break;
+
+                case 9:
+
+                m_drivetrain.turnTo(310);
+                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
+
+                if(m_drivetrain.getAngle() > 307){
+                    m_autoStep++;
+                    ticks = 0;
+                }
+
+                break;
+
+                case 10:
+
+                ticks++;
+                if(m_drivetrain.target(-30) && ticks > 30){
+                    m_autoStep++;
+                    m_drivetrain.tank(0,0);
+                }
+
+                break;
+
+                case 11:
+
+                break;
+            }
+        }else{
+            
+        }
+        
+    }
+
+    double maxDeviation = 2;
+
+    MiniPID m_driveLoop = new MiniPID(1,0,0);
+
+    public boolean driveForward(double speed, double angle, double point1, double point2){
+
+        double turn = 0;
+        if(m_drivetrain.getAngle() > angle+maxDeviation){
+
+            if(angle < m_drivetrain.getAngle()-5){
+                turn = 0.35;
+            }else{
+                turn = 0.25;
+            }
+        }
+
+        if(m_drivetrain.getAngle() < angle-maxDeviation){
+            if(angle > m_drivetrain.getAngle()+5){
+                turn = -0.35;
+            }else{
+                turn = -0.25;
+            }
+        }
+        System.out.println(m_drivetrain.getEncoder());
+
+        if(speed > 0){
+            if(m_drivetrain.getEncoder() < point1){
+                m_drivetrain.arcadeDrive(-speed, turn);
+                return false;
+            }else if(m_drivetrain.getEncoder() < point2){
+                m_drivetrain.arcadeDrive(-speed*0.5, turn);
+                return false;
+            }
+        }else{
+            if(m_drivetrain.getEncoder() > point1){
+                m_drivetrain.arcadeDrive(-speed, turn);
+                return false;
+            }else if(m_drivetrain.getEncoder() > point2){
+                m_drivetrain.arcadeDrive(-speed*0.5, turn);
+                return false;
+            }
+        }
+        
+
+        m_drivetrain.arcadeDrive(0,0);
+
+        return true;
     }
 
     public void teleopInit() {
     }
 
     int pressState = 0;
-    public void teleopPeriodic() {
-
-        if(m_joystick.getRawButton(4)) 
-            m_drivetrain.target();
-        
+    int grabState = 0;
+    public void teleopPeriodic() {     
         
         m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
+
+        if(m_joystick.getRawButton(4)){ 
+            m_drivetrain.target(-30);
+            return;
+        }
 
         // Switch statement controlling what object the robot is grabbing
         switch(pressState){
@@ -111,69 +297,114 @@ public class Robot extends IterativeRobot {
         
         if(m_robotState.state() == State.PLACE_PANEL){
 
+            // ELEVATOR CONTROLS
             if(m_joystick.getRawButton(7))
-                m_elevator.setLevel(LiftLevels.HATCH_LOW);
-
+                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
             if(m_joystick.getRawButton(9))
                 m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
-
             if(m_joystick.getRawButton(11))
-                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
+            SmartDashboard.putNumber("GrabState", grabState);
+            switch(grabState){
+                case 0:
+                    grabState = 0;
+                    if(m_joystick.getRawButton(2))
+                        grabState = 1;
+                    break;
 
-            if(m_joystick.getPOV(0) == 0){
-                m_elevator.granular(1);
-            }
+                case 1:
+                    
+                    grabState = 1;
 
-            if(m_joystick.getPOV(0) == 180){
-                m_elevator.granular(-1);
-            }
+                    if(!m_joystick.getRawButton(2)){
+                        grabState = 2;
+                        m_elevator.grab();
+                    }
+                    break;
 
-            if(m_joystick.getRawButton(1)){
-                m_elevator.place();
-            }
+                case 2:
 
-            if(m_joystick.getRawButton(2)){
-                m_elevator.grab();
-            }
+                    grabState = 2;
+                    
+                    if(m_joystick.getRawButton(2)){
+                        grabState = 3;
+                    }
+                        
+                    break;
 
-            if(m_joystick.getRawButton(12)){
-                m_cargoSystem.placeCargo();
+                case 3:
+
+                    grabState = 3;
+                    
+                    if(!m_joystick.getRawButton(2)){
+                        grabState = 0;
+                        m_elevator.place();
+                    }
+                    break;
             }
+            
         }
 
-        if(m_robotState.state() == State.PLACE_CARGO){
+        if(m_robotState.state() == State.PLACE_CARGO){     
 
-            if(m_joystick.getRawButton(1))
-                m_cargoSystem.placeCargo();      
-
+            // ELEVATOR HEIGHTS
             if(m_joystick.getRawButton(7))
-                m_elevator.setLevel(LiftLevels.PORT_LOW);
-
-            if(m_joystick.getRawButton(8))
+                m_elevator.setLevel(LiftLevels.PORT_HIGH);
+            if(m_joystick.getRawButton(12))
                 m_elevator.setLevel(LiftLevels.PORT_CARGO_SHIP);
-
             if(m_joystick.getRawButton(9))
                 m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
-
             if(m_joystick.getRawButton(11))
-                m_elevator.setLevel(LiftLevels.PORT_HIGH);
-
-            if(m_joystick.getPOV(0) == 0){
-                m_elevator.granular(1);
-            }
-
-            if(m_joystick.getPOV(0) == 180){
-                m_elevator.granular(-1);
-            }
+                m_elevator.setLevel(LiftLevels.PORT_LOW);       
         }
 
+        // GENERAL CONTROLS
+
+        // GRANULAR ELEVATOR CONTROLS
+        if(m_joystick.getPOV(0) == 0){
+            m_elevator.granular(1);
+        }
+        if(m_joystick.getPOV(0) == 180){
+            m_elevator.granular(-1);
+        }
+
+        // PLACES CARGO
+        if(m_joystick.getRawButton(1)){
+            m_cargoSystem.placeCargo(0.5);
+        }
+
+        // RUNS PASSTHROUGH SYSTEM
+        if(m_joystick.getRawButton(10)){
+            m_cargoSystem.runPassthrough(1);
+            m_cargoSystem.placeCargo(0.15);
+            m_cargoSystem.lowerArm();
+        }
+
+        // MANUAL FUNCTIONS
+
+        // Reverse Passthrough
+        if(m_nav.getRawButton(1)){
+            m_cargoSystem.reverse();
+        }
+
+        // Reset Passthrough
+        if(m_nav.getRawButton(4)){
+            pressState = 0;
+            m_robotState.setState(State.PLACE_PANEL);
+        }
+
+
+
         m_cargoSystem.run();
-        m_elevator.run();
+
+        
+        
     }
 
     public void disabledInit(){
         m_drivetrain.tank(0,0);
         m_elevator.reset();
+        
     }
 
     
@@ -187,5 +418,14 @@ public class Robot extends IterativeRobot {
         SmartDashboard.putBoolean("b1", m_cargoSystem.get1());
         SmartDashboard.putBoolean("b2", m_cargoSystem.get2());
         SmartDashboard.putBoolean("b3", m_cargoSystem.get3()); 
+        SmartDashboard.putNumber("encoder", m_drivetrain.getLeftEncoder());
+
+        try{
+            SmartDashboard.putNumber("distance", sensor1.readRangeContinuousMillimeters());
+        }catch(Exception e){
+            System.out.println("nd");
+        }
+        
+        m_elevator.run();
     }
 }
