@@ -28,9 +28,9 @@ public class Robot extends IterativeRobot {
     Elevator m_elevator = Elevator.getInstance();
     RobotState m_robotState = RobotState.getInstance();
     Vision m_vision = Vision.getInstance();
-    EsCargo m_cargoSystem = EsCargo.getInstance();
+    CargoSystem m_cargoSystem = CargoSystem.getInstance();
     Joystick m_joystick = new Joystick(0);
-    //Joystick m_nav = new Joystick(1);
+    Joystick m_nav = new Joystick(1);
 
     boolean m_autoState = false;
     VL53L0X sensor1;
@@ -370,35 +370,26 @@ public class Robot extends IterativeRobot {
 
         // PLACES CARGO
         if(m_joystick.getRawButton(1)){
-            m_cargoSystem.placeCargo(0.5);
+            m_cargoSystem.shoot(0.5);
         }
 
         // RUNS PASSTHROUGH SYSTEM
         if(m_joystick.getRawButton(10)){
-            m_cargoSystem.runPassthrough(1);
-            m_cargoSystem.placeCargo(0.15);
-            m_cargoSystem.lowerArm();
+            m_cargoSystem.runSystem();
         }
 
         // MANUAL FUNCTIONS
 
         // Reverse Passthrough
         if(m_nav.getRawButton(1)){
-            m_cargoSystem.reverse();
+            m_cargoSystem.runPassthrough(-1);;
         }
 
         // Reset Passthrough
         if(m_nav.getRawButton(4)){
             pressState = 0;
             m_robotState.setState(State.PLACE_PANEL);
-        }
-
-
-
-        m_cargoSystem.run();
-
-        
-        
+        }     
     }
 
     public void disabledInit(){
@@ -413,18 +404,10 @@ public class Robot extends IterativeRobot {
     public void robotPeriodic(){
         SmartDashboard.putNumber("Gyro", m_drivetrain.getAngle());
         SmartDashboard.putNumber("Elevator Position", m_elevator.getRaw());
-        SmartDashboard.putNumber("Arm Position", m_cargoSystem.getArmPosition());  
-
-        SmartDashboard.putBoolean("b1", m_cargoSystem.get1());
-        SmartDashboard.putBoolean("b2", m_cargoSystem.get2());
-        SmartDashboard.putBoolean("b3", m_cargoSystem.get3()); 
-        SmartDashboard.putNumber("encoder", m_drivetrain.getLeftEncoder());
-
-        try{
-            SmartDashboard.putNumber("distance", sensor1.readRangeContinuousMillimeters());
-        }catch(Exception e){
-            System.out.println("nd");
-        }
+        SmartDashboard.putBoolean("passthrough sensor", m_cargoSystem.getPassthroughSensor());
+        SmartDashboard.putBoolean("back shooter sensor", m_cargoSystem.getBackShooterSensor());
+        SmartDashboard.putBoolean("front shooter sensor", m_cargoSystem.getFrontShooterSensor()); 
+        SmartDashboard.putNumber("drivetrain position", m_drivetrain.getEncoder());
         
         m_elevator.run();
     }
