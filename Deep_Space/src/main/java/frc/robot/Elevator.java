@@ -7,6 +7,8 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ControlType;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Elevator {
@@ -18,6 +20,8 @@ public class Elevator {
 	CANSparkMax m_spark = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
 	CANEncoder m_encoder = m_spark.getEncoder();
 	CANPIDController m_pidController = m_spark.getPIDController();
+
+	DoubleSolenoid m_grabber = new DoubleSolenoid(6,7);
 
 	double kP = 0.00008;
     double kI = 5e-6;
@@ -90,7 +94,7 @@ public class Elevator {
 		}
 
 		if(m_placing){
-			finalPosition = m_targetPosition + 5;
+			finalPosition = m_targetPosition + 7;
 		}else{
 			finalPosition = m_targetPosition;
 		}
@@ -102,6 +106,14 @@ public class Elevator {
 			finalPosition = 81;
 		}
 		m_pidController.setReference(finalPosition, ControlType.kSmartMotion);
+	}
+
+	public void extend(){
+		m_grabber.set(Value.kForward);
+	}
+
+	public void retract(){
+		m_grabber.set(Value.kReverse);
 	}
 
 	public void place(){

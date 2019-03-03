@@ -194,7 +194,7 @@ public class Drivetrain {
     public boolean turnTo(double angle){
         double turn = c_visionLoop.getOutput(getAngle(), angle);
 
-        arcadeDrive(0,-turn);
+        autocade(0,-turn);
         
 
         if(getAngle() > angle - 1 && getAngle() < angle + 1){
@@ -218,9 +218,9 @@ public class Drivetrain {
         double left = 0;
 
         if(m_elevator.maximumDriveSpeed() == 0.2){
-            autocade(-.4,target/15*3);
+            autocade(-.6,target/15*3);
         }else{
-            autocade(-0.2,target/40);
+            autocade(-0.2,target/50);
         }
         
         if(m_leftEncoder.getVelocity() < 100){

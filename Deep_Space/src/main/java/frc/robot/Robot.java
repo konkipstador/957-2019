@@ -7,11 +7,10 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.libraries.MiniPID;
-import frc.libraries.VL53L0X;
 import frc.robot.Elevator.LiftLevels;
 import frc.robot.RobotState.State;
 
@@ -22,7 +21,7 @@ import frc.robot.RobotState.State;
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends IterativeRobot {
+public class Robot extends TimedRobot {
 
     Drivetrain m_drivetrain = Drivetrain.getInstance();
     Elevator m_elevator = Elevator.getInstance();
@@ -31,167 +30,275 @@ public class Robot extends IterativeRobot {
     CargoSystem m_cargoSystem = CargoSystem.getInstance();
     Joystick m_joystick = new Joystick(0);
     Joystick m_nav = new Joystick(1);
+    Climber m_climber = new Climber();
 
     boolean m_autoState = false;
-    VL53L0X sensor1;
-
 
     int m_autoPhase = 0;
+    int m_cylinderState = 0;
+    int m_pegState = 0;
+    int m_pokeState = 0;
+
+    Auto m_autoMode = Auto.ROCKET_RIGHT;
     
     public void robotInit() {      
         m_robotState.setState(State.PLACE_PANEL);     
         m_drivetrain.resetNavX();  
-        try{
-            sensor1 = new VL53L0X(0x29);
-        }catch(Exception e){
-            System.out.println("Sensor failed to initalize.");
-        }
-       
-        
+        //m_climber.raiseFront();
     }
 
     public void autonomousInit() {
         m_drivetrain.resetEncoders();
-        
+        m_climber.lowerFront();
+        m_drivetrain.resetNavX();;
         m_autoPhase = 0;
         m_autoStep = 0;
     }
 
     int m_autoStep = 0;
     int ticks = 0;
+    int ticks2 = 0;
+    double storedAngle = 0;
 
     public void autonomousPeriodic() {
-        //m_pathweaver.runPath(0);
-        //m_cargoSystem.drive(m_joystick.getRawAxis(1));
+        
+        switch(m_autoMode){
+            
+            case ROCKET_RIGHT:
 
-        //m_drivetrain.turnTo(180);
-
-        if(true){
-            switch(m_autoStep){
-                case 0:
-    
-                if(driveForward(0.5, 0, 55,65)){
-                    m_autoStep++;
-                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                    m_elevator.grab();
-                }
-    
-                break;
-    
-                case 1:
-    
-                m_drivetrain.turnTo(-75);
-                if(m_drivetrain.getAngle() < -71){
-                    m_autoStep++;
-                    m_drivetrain.resetEncoders();
-                }
+                switch(m_autoStep){
+                    case 0:
+                    m_elevator.retract();
+                    if(driveForward(0.5, -2.5, 55,65)){
+                        m_autoStep++;
+                        m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                        m_elevator.grab();
+                        m_elevator.extend();
+                        ticks = 0;
+                    }
+        
+                    break;
+        
+                    case 1:
+                    ticks++;
                     
-                break;
-    
-                case 2:
-    
-                if(driveForward(0.5,-75, 32,37)){
-                    m_autoStep = 3;
-                }
-    
-                break;
-    
-                case 3:
-                    m_drivetrain.turnTo(-30);
-                    if(m_drivetrain.getAngle() > -35){
+                    if(m_drivetrain.target(0) && ticks > 15){
+                        storedAngle = m_drivetrain.getAngle();
+                        m_drivetrain.tank(0,0);
                         m_autoStep++;
                         ticks = 0;
                     }
-                break;
-    
-                case 4:
-    
-                ticks++;
-    
-                if(m_drivetrain.target(-30) && ticks > 20){
-                    //m_autoStep++;
-                    m_drivetrain.resetEncoders();
-                    m_drivetrain.tank(0,0);
+                        
+                    break;
+        
+                    case 2:
+        
                     m_elevator.place();
-                }
-    
-    
-                break;
+                    ticks++;
+                    if(ticks > 25){
+                        m_autoStep = 5;
+                        m_drivetrain.resetEncoders();
+                        m_elevator.retract();
+                    }
+        
+                    break;
 
-                case 5:
+                    case 5:
 
-                if(m_drivetrain.getEncoder() > -20){
-                    driveForward(-.65, -30, -80,-100);
-                }else{
-                    if(driveForward(-.7, 20, -115,-130)){
+                    if(m_drivetrain.getEncoder() > -20 ){
+                        driveForward(-.5, 0, -80,-100);
+                    }else{
+                        if(driveForward(-.5, 65, -115,-130)){
+                            m_autoStep++;
+                            ticks = 0;
+                        }
+                    }
+                    
+                    break;
+
+                    case 6:
+
+                    ticks++;
+
+                    m_drivetrain.turnTo(170);
+                    m_elevator.extend();
+                    if(m_drivetrain.getAngle() > 165 && ticks > 60){
+                        m_autoStep++;
+                        ticks = 0;
+                        ticks2 = 0;
+                    }
+
+                    break;
+
+                    case 7:
+
+                    ticks++;
+                    if(m_drivetrain.target(0) && ticks > 60){
+                        ticks2++;
+                        m_drivetrain.tank(0,0);
+                        m_drivetrain.resetEncoders();
+                        m_elevator.grab();
+
+                        if(ticks2 > 10){
+                            m_autoStep++;
+                        }
+                    }
+
+                    break;
+
+                    case 8:
+
+                    if(driveForward(-.5, 230, -100,-110)){
                         m_autoStep++;
                         ticks = 0;
                     }
+
+                    break;
+
+                    case 9:
+
+                    m_drivetrain.turnTo(320);
+                    m_elevator.setLevel(LiftLevels.HATCH_HIGH);
+                    m_elevator.extend();
+                    if(m_drivetrain.getAngle() > 310){
+                        m_autoStep++;
+                        m_drivetrain.tank(0,0);
+                        ticks = 0;
+                    }
+
+                    break;
+
+                    case 10:
+
+                    ticks++;
+                    if(m_drivetrain.target(0) && ticks > 60){
+                        m_autoStep++;
+                        m_drivetrain.tank(0,0);
+                        m_elevator.place();
+                        ticks = 0;
+                    }
+
+                    break;
+
+                    case 11:
+                    m_drivetrain.tank(0,0);
+                    ticks++;
+                    if(ticks > 20){
+                        m_elevator.retract();
+                    }
+
+                    break;
                 }
+
+            break;
+
+            case ROCKET_LEFT:
+
+            break;
+
+            case CARGO_RIGHT:
+
+            switch(m_autoStep){
+
+                case 0:
+
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
+                double speed = 0.5;
+                if(m_drivetrain.getEncoder() > 40){
+                    speed = 0.70;
+                }
+
+                if(driveForward(speed, -15, 135,165)){
+                    m_autoStep++;     
+                    m_elevator.grab();
+                    m_elevator.extend();
+                }
+
+                break;
+
+                case 1:
+
+                m_drivetrain.turnTo(85);
+                if(m_drivetrain.getAngle() > 82){
+                    m_drivetrain.tank(0,0);
+                    m_autoStep++;
+                    ticks = 0;
+                    ticks2 = 0;
+                }
+
+                break;
+
+                case 2:
+
+                ticks++;
+                if(m_drivetrain.target(90) && ticks > 15){
+                    m_elevator.place();
+                    if(ticks2 > 5){
+                        m_autoStep++;
+                    }
+                    ticks2++;
+                    
+                }
+
+                break;
+
+                case 3:
+
+                m_drivetrain.tank(0,0);
                 
-                break;
-
-                case 6:
-
-                ticks++;
-
-                m_drivetrain.turnTo(180);
-                if(m_drivetrain.getAngle() > 178 && ticks > 30){
-                    m_autoStep++;
-                    ticks = 0;
-                }
-
-                break;
-
-                case 7:
-
-                ticks++;
-                if(m_drivetrain.target(0) && ticks > 15){
-                    m_drivetrain.tank(0,0);
-                    m_autoStep++;
-                    m_drivetrain.resetEncoders();
-                }
-
-                break;
-
-                case 8:
-
-                if(driveForward(-.7, 195, -90,-100)){
-                    m_autoStep++;
-                    ticks = 0;
-                }
-
-                break;
-
-                case 9:
-
-                m_drivetrain.turnTo(310);
-                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
-
-                if(m_drivetrain.getAngle() > 307){
-                    m_autoStep++;
-                    ticks = 0;
-                }
-
-                break;
-
-                case 10:
-
-                ticks++;
-                if(m_drivetrain.target(-30) && ticks > 30){
-                    m_autoStep++;
-                    m_drivetrain.tank(0,0);
-                }
-
-                break;
-
-                case 11:
 
                 break;
             }
-        }else{
+
+            break;
+
+            case CARGO_LEFT:
+
+                switch(m_autoStep){
+
+                    case 0:
+
+                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
+
+                    if(driveForward(0.5, 10, 176,192)){
+                        m_autoStep++;     
+                        m_elevator.grab();
+                    }
+
+                    break;
+
+                    case 1:
+
+                    m_drivetrain.turnTo(-90);
+                    if(m_drivetrain.getAngle() > -87){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                        ticks = 0;
+                    }
+
+                    break;
+
+                    case 2:
+
+                    ticks++;
+                    if(m_drivetrain.target(-90) && ticks > 15){
+                        
+                        m_autoStep++;
+                    }
+
+                    break;
+
+                    case 3:
+
+                    m_drivetrain.tank(0,0);
+
+                    break;
+                }
+            break;
             
         }
+
+        
         
     }
 
@@ -245,6 +352,7 @@ public class Robot extends IterativeRobot {
     }
 
     public void teleopInit() {
+        //m_climber.raiseFront();
     }
 
     int pressState = 0;
@@ -253,48 +361,21 @@ public class Robot extends IterativeRobot {
         
         m_drivetrain.arcadeDrive(m_joystick.getRawAxis(1), m_joystick.getRawAxis(2));
 
-        if(m_joystick.getRawButton(4)){ 
-            m_drivetrain.target(-30);
-            return;
+        // Switches to Place Panel mode and cancels any passthrough functions
+        if(m_joystick.getRawButton(5)){
+            m_robotState.setState(State.PLACE_PANEL);
         }
 
-        // Switch statement controlling what object the robot is grabbing
-        switch(pressState){
-            case 0:
-                pressState = 0;
-                if(m_joystick.getRawButton(3) && m_elevator.getRaw() < 10)
-                    pressState = 1;
-                break;
-
-            case 1:
-                
-                pressState = 1;
-
-                if(!m_joystick.getRawButton(3)){
-                    pressState = 2;
-                    m_robotState.setState(State.GRAB_CARGO);
-                }
-                break;
-
-            case 2:
-
-                pressState = 2;
-                
-                if(m_joystick.getRawButton(3))
-                    pressState = 3;
-                break;
-
-            case 3:
-
-                pressState = 3;
-                
-                if(!m_joystick.getRawButton(3)){
-                    pressState = 0;
-                    m_robotState.setState(State.PLACE_PANEL);
-                }
-                break;
+        // Switches to Grab Cargo mode
+        if(m_joystick.getRawButton(3) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO_FEEDER)){
+            m_robotState.setState(State.GRAB_CARGO);
         }
-        
+
+        // Switches to Grab Cargo from feeder station mode
+        if(m_joystick.getRawButton(4) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO)){
+            m_robotState.setState(State.GRAB_CARGO_FEEDER);
+        }
+  
         if(m_robotState.state() == State.PLACE_PANEL){
 
             // ELEVATOR CONTROLS
@@ -304,6 +385,8 @@ public class Robot extends IterativeRobot {
                 m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
             if(m_joystick.getRawButton(11))
                 m_elevator.setLevel(LiftLevels.HATCH_LOW);
+
+            // Controls the state of the passive grabber
             SmartDashboard.putNumber("GrabState", grabState);
             switch(grabState){
                 case 0:
@@ -341,12 +424,10 @@ public class Robot extends IterativeRobot {
                         m_elevator.place();
                     }
                     break;
-            }
-            
+            }      
         }
 
         if(m_robotState.state() == State.PLACE_CARGO){     
-
             // ELEVATOR HEIGHTS
             if(m_joystick.getRawButton(7))
                 m_elevator.setLevel(LiftLevels.PORT_HIGH);
@@ -357,8 +438,6 @@ public class Robot extends IterativeRobot {
             if(m_joystick.getRawButton(11))
                 m_elevator.setLevel(LiftLevels.PORT_LOW);       
         }
-
-        // GENERAL CONTROLS
 
         // GRANULAR ELEVATOR CONTROLS
         if(m_joystick.getPOV(0) == 0){
@@ -373,23 +452,19 @@ public class Robot extends IterativeRobot {
             m_cargoSystem.shoot(0.5);
         }
 
-        // RUNS PASSTHROUGH SYSTEM
-        if(m_joystick.getRawButton(10)){
-            m_cargoSystem.runSystem();
+        // Vision Processing
+        if(m_joystick.getRawButton(12)){ 
+            m_drivetrain.target(-30);
+            return;
         }
-
-        // MANUAL FUNCTIONS
 
         // Reverse Passthrough
         if(m_nav.getRawButton(1)){
-            m_cargoSystem.runPassthrough(-1);;
+            m_robotState.setState(State.PLACE_PANEL);
+            m_cargoSystem.runPassthrough(-1);
         }
 
-        // Reset Passthrough
-        if(m_nav.getRawButton(4)){
-            pressState = 0;
-            m_robotState.setState(State.PLACE_PANEL);
-        }     
+        controlMechanisms();
     }
 
     public void disabledInit(){
@@ -398,7 +473,17 @@ public class Robot extends IterativeRobot {
         
     }
 
-    
+    /** Utilizes the Teleop panel grabber switch statement in Auto to extend and retract panel grabber */
+    public void extend(){
+        m_pokeState = 2;
+    }
+    public void retract(){
+        m_pokeState = 0;
+    }
+
+    public void testPeriodic(){
+        //m_climber.lowerBack();
+    }
 
     /** Instrum Code */
     public void robotPeriodic(){
@@ -410,5 +495,146 @@ public class Robot extends IterativeRobot {
         SmartDashboard.putNumber("drivetrain position", m_drivetrain.getEncoder());
         
         m_elevator.run();
+        m_cargoSystem.run();
+        m_climber.run();   
+    }
+
+    public void controlMechanisms(){
+
+        // Controls the grabber
+        switch(m_pokeState){
+            case 0:
+            m_pokeState = 0;
+                m_elevator.retract();
+                if(m_joystick.getRawButton(6))
+                    m_pokeState = 1;
+                break;
+
+            case 1:
+                
+                m_pokeState = 1;
+
+                if(!m_joystick.getRawButton(6)){
+                    m_pokeState = 2;
+                    
+                }
+                break;
+
+            case 2:
+
+                m_pokeState = 2;
+                m_elevator.extend();
+                if(m_joystick.getRawButton(6)){
+                    m_pokeState = 3;
+                }
+                    
+                break;
+
+            case 3:
+
+                m_pokeState = 3;
+                
+                if(!m_joystick.getRawButton(6)){
+                    m_pokeState = 0;
+                    
+                }
+                break;
+        }
+
+        if(m_robotState.state() == State.PLACE_PANEL){
+            // Controls the climbing system
+            switch(m_cylinderState){
+                case 0:
+
+                    m_cylinderState = 0;
+                    
+                    if(m_joystick.getRawButton(8))
+                        m_cylinderState = 1;
+                    break;
+
+                case 1:
+                    
+                    m_cylinderState = 1;
+
+                    if(!m_joystick.getRawButton(8)){
+                        m_climber.lowerFront();
+                        m_cylinderState = 2;
+                        
+                    }
+                    break;
+
+                case 2:
+
+                    m_cylinderState = 2;
+                    
+                   
+                    if(m_joystick.getRawButton(8)){
+                        m_cylinderState = 3;
+                    }
+                        
+                    break;
+
+                case 3:
+
+                    m_cylinderState = 3;
+                    
+                    if(!m_joystick.getRawButton(8)){
+                        m_climber.raiseFront();
+                        m_cylinderState = 0;
+                        
+                    }
+                    break;
+            }
+            switch(m_pegState){
+                case 0:
+                    m_pegState = 0;
+                    
+                    if(m_joystick.getRawButton(10))
+                        m_pegState = 1;
+                    break;
+
+                case 1:
+                    
+                    m_pegState = 1;
+
+                    if(!m_joystick.getRawButton(10)){
+                        System.out.println("up");
+                        m_climber.lowerBack();
+                        m_pegState = 2;
+                        
+                    }
+                    break;
+
+                case 2:
+
+                    m_pegState = 2;
+                    
+                    if(m_joystick.getRawButton(10)){
+                        m_pegState = 3;
+                    }
+                        
+                    break;
+
+                case 3:
+
+                    m_pegState = 3;
+                    
+                    if(!m_joystick.getRawButton(10)){
+                        m_climber.raiseBack();
+                        m_pegState = 0;
+                        
+                    }
+                    break;
+            }
+        }else{
+            //m_climber.raiseFront();
+            //m_climber.raiseBack();
+        }
+    }
+
+    
+
+    enum Auto{
+        ROCKET_RIGHT, ROCKET_LEFT, CARGO_RIGHT, CARGO_LEFT, MANUAL;
     }
 }
