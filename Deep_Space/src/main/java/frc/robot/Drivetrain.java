@@ -7,7 +7,6 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 
 import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.libraries.MiniPID;
 
 /**
@@ -28,7 +27,7 @@ public class Drivetrain {
     double kD = 0;
     double kF = 0;
 
-    double v_vkp = 0.03;
+    double v_vkp = 0.1;
     double v_vki = 0.;
     double v_vkd = 0;
     MiniPID c_visionLoop = new MiniPID(v_vkp,v_vki,v_vki);
@@ -204,13 +203,6 @@ public class Drivetrain {
         return false;
     }
 
-    /** Drives the robot straight without incorperating a distance */    
-    public void driveStraight(double angle, double speed){
-        double turn = c_visionLoop.getOutput(getAngle(), angle);
-
-       
-    }
-
     /** Drives towards a vision target */
     public boolean target(double desiredAngle){
         double target = m_vision.getTargetLocation();
@@ -228,6 +220,80 @@ public class Drivetrain {
             return true;
         }
         return false;
+    }
+
+    boolean m_angleFound = false;
+
+    public void refreshTargetAngle(){
+        m_angleFound = false;
+    }
+
+    public boolean targetAngle(double desiredAngle){
+        double target = m_vision.getTargetLocation();
+        
+        double left = 0;
+
+        if(target == 0 && !m_angleFound){
+            double turn = 0;
+            if(m_drivetrain.getAngle() > desiredAngle+2){
+
+                if(desiredAngle < m_drivetrain.getAngle()-5){
+                    turn = 0.15;
+                }else{
+                    turn = 0.10;
+                }
+        }
+
+            if(m_drivetrain.getAngle() < desiredAngle-2){
+                if(desiredAngle > m_drivetrain.getAngle()+5){
+                    turn = -0.15;
+                }else{
+                    turn = -0.10;
+                }
+            }
+
+            if(m_elevator.maximumDriveSpeed() == 0.2){
+                autocade(-.6,turn);
+            }else{
+                autocade(-0.2,turn);
+            }
+
+            return false;
+        }else{
+            m_angleFound = true;
+            if(m_elevator.maximumDriveSpeed() == 0.2){
+                autocade(-.6,target/15*3);
+            }else{
+                autocade(-0.2,target/50);
+            }
+            
+            if(m_leftEncoder.getVelocity() < 100){
+                System.out.println("done");
+                return true;
+            }
+            return false;
+        }
+        
+    }
+
+    public boolean faceTarget(){
+
+        double target = m_vision.getTargetLocation();
+        double turn = 0;
+        double left = 0;
+
+        if(m_elevator.maximumDriveSpeed() == 0.2){
+            autocade(0,target/15*3);
+        }else{
+            autocade(0,target/50);
+        }
+        
+        if(Math.abs(target) < 2){
+            System.out.println("done");
+            return true;
+        }
+        return false;
+
     }
 
     public void autocade(double speed, double turn){
@@ -275,9 +341,12 @@ public class Drivetrain {
     
     /**  Returns the average left and right encoder values */
     public double getEncoder(){
-        SmartDashboard.putNumber("Encoder", -Math.round((((getRightEncoder() - getLeftEncoder()) / 2)/365)*5.95*3.14159));
-        return -((getRightEncoder() - getLeftEncoder()) / (2*8.68))*3.14159*5.95;
-        
+        return -((getRightEncoder() - getLeftEncoder()) / (2*8.68))*3.14159*5.95;    
+    }
+
+    public double getCurrent(){
+        return m_leftNeoMaster.getOutputCurrent() + m_leftNeoSlave.getOutputCurrent() + 
+               m_rightNeoMaster.getOutputCurrent() + m_rightNeoSlave.getOutputCurrent();
     }
 
     // _____MATH FUNCTIONS_____

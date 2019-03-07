@@ -1,7 +1,6 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -11,7 +10,7 @@ public class CargoSystem{
 
     RobotState m_state = RobotState.getInstance();
 
-    DoubleSolenoid m_arm = new DoubleSolenoid(4,5);
+    DoubleSolenoid m_arm = new DoubleSolenoid(6,4,5);
     WPI_TalonSRX m_passthrough = new WPI_TalonSRX(7);
     WPI_TalonSRX m_shooterL = new WPI_TalonSRX(8);
     WPI_TalonSRX m_shooterR = new WPI_TalonSRX(9);
@@ -74,7 +73,11 @@ public class CargoSystem{
 
                 armState = false;
                 passthroughSpeed = 1;
-                shooterSpeed = 0.16;
+                shooterSpeed = 0.2;
+
+                if(!m_frontShooterSensor.get()){
+                    shooterSpeed = 0.15;
+                }
 
                 if(!m_frontShooterSensor.get() && m_backShooterSensor.get()){
                     m_state.setState(State.PLACE_CARGO);
@@ -157,5 +160,9 @@ public class CargoSystem{
 
     public boolean getFrontShooterSensor(){
         return m_frontShooterSensor.get();
+    }
+
+    public double getCurrent(){
+        return m_passthrough.getOutputCurrent() + m_shooterL.getOutputCurrent() + m_shooterR.getOutputCurrent();
     }
 }

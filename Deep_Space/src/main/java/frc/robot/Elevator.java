@@ -9,7 +9,6 @@ import com.revrobotics.ControlType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Elevator {
 
@@ -21,7 +20,8 @@ public class Elevator {
 	CANEncoder m_encoder = m_spark.getEncoder();
 	CANPIDController m_pidController = m_spark.getPIDController();
 
-	DoubleSolenoid m_grabber = new DoubleSolenoid(6,7);
+	//DoubleSolenoid m_grabber = new DoubleSolenoid(12, 0,1);
+	DoubleSolenoid m_grabber = new DoubleSolenoid(6, 6,7);
 
 	double kP = 0.00008;
     double kI = 5e-6;
@@ -36,6 +36,7 @@ public class Elevator {
 
 	double m_position = 0;
 	boolean m_placing = false;
+	boolean m_extended = false;
 	
 	private static Elevator m_elevatorSystem;	// Synchronized m_Elevator object
 
@@ -68,8 +69,6 @@ public class Elevator {
 		if(m_targetPosition > 82){
 			m_targetPosition = 82;
 		}
-		SmartDashboard.putNumber("pos", m_encoder.getPosition());
-		SmartDashboard.putNumber("tg", m_position);
 	}
 
 	/** Sets the m_elevator position.
@@ -110,10 +109,16 @@ public class Elevator {
 
 	public void extend(){
 		m_grabber.set(Value.kForward);
+		m_extended = true;
 	}
 
 	public void retract(){
 		m_grabber.set(Value.kReverse);
+		m_extended = false;
+	}
+
+	public boolean isExtended(){
+		return m_extended;
 	}
 
 	public void place(){
@@ -152,6 +157,10 @@ public class Elevator {
 		return 1;
 	}
 
+	public double getCurrent(){
+		return m_spark.getOutputCurrent();
+	}
+
 	/** @return Returns a synchronized m_elevator object. */
 	public static synchronized Elevator getInstance(){
         if (m_elevatorSystem == null)
@@ -164,24 +173,31 @@ public class Elevator {
 	public enum LiftLevels{
     
 		// Levels of the hatch ports
-		HATCH_LOW(0.6), HATCH_MEDIUM(40), HATCH_HIGH(76),
+		HATCH_LOW(0.6, "Hatch Low"), HATCH_MEDIUM(40, "Hatch Medium"), HATCH_HIGH(76, "Hatch High"),
 		// Levels of the cargo ports
-		PORT_LOW(0.6), PORT_CARGO_SHIP(40), PORT_MEDIUM(40), PORT_HIGH(82),
+		PORT_LOW(0.6, "Cargo Low"), PORT_CARGO_SHIP(40, "Cargo Ship"), PORT_MEDIUM(40, "Cargo Medium"), PORT_HIGH(82, "Cargo High"),
 		// Other Levels
-		GROUND(0.6);
+		GROUND(0.6, "very low, much ground");
 		
 		// Placeholder variables for the Enumerator structure
 		private final double m_encoderPosition;
+		private final String m_identifier;
 	
 		// Enum structure constructor
-		private LiftLevels(double encoderPosition) { 
+		private LiftLevels(double encoderPosition, String identifer) { 
 			m_encoderPosition = encoderPosition;
+			m_identifier = identifer;
 		} 
 	
 		// Get the m_elevator level that is target
 		public double encoderPosition() 
 		{ 
 			return m_encoderPosition;
+		} 
+
+		public String identifier() 
+		{ 
+			return m_identifier;
 		} 
 	}
 }

@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Vision {
 
@@ -16,6 +15,12 @@ public class Vision {
     NetworkTableEntry m_piX3;
     NetworkTableEntry m_piX4;
 
+    NetworkTableEntry m_camMode;
+
+    NetworkTableEntry m_streams;
+
+    String[] streams = {"http://10.9.57.3:5800/"};
+
     public Vision(){
         NetworkTableInstance inst = NetworkTableInstance.getDefault();
         NetworkTable limelight = inst.getTable("limelight");
@@ -26,11 +31,24 @@ public class Vision {
         m_piX2 = pi.getEntry("px2");
         m_piX3 = pi.getEntry("px3");
         m_piX4 = pi.getEntry("px4");
+
+        m_camMode = NetworkTableInstance.getDefault().getTable("limelight").getEntry("camMode");
+        m_camMode.setNumber(1);
+
+        m_streams = NetworkTableInstance.getDefault().getTable("CameraPublisher").getSubTable("Camera").getEntry("streams");
+        m_streams.setStringArray(streams);
     }
 
     public double getTargetLocation(){
-        SmartDashboard.putNumber("target", m_limelightX.getDouble(0));
         return m_limelightX.getDouble(0);
+    }
+
+    public void enableTracking(){
+        m_camMode.setNumber(0);
+    }
+
+    public void disableTracking(){
+        m_camMode.setNumber(1);
     }
 
     /** Syncronized Signleton creator. */
