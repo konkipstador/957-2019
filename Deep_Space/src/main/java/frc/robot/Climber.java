@@ -14,8 +14,8 @@ public class Climber {
 
     DoubleSolenoid m_front = new DoubleSolenoid(6, 0, 1);
     DoubleSolenoid m_back = new DoubleSolenoid(6, 2, 3);
-    //DoubleSolenoid m_stand = new DoubleSolenoid(6, 6, 7);
-    DoubleSolenoid m_stand = new DoubleSolenoid(12, 0, 1);
+    DoubleSolenoid m_stand = new DoubleSolenoid(6, 6, 7);
+    //DoubleSolenoid m_stand = new DoubleSolenoid(12, 0, 1);
 
     public void lowerFront(){
         m_back.set(Value.kForward);

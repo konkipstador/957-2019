@@ -20,8 +20,8 @@ public class Elevator {
 	CANEncoder m_encoder = m_spark.getEncoder();
 	CANPIDController m_pidController = m_spark.getPIDController();
 
-	//DoubleSolenoid m_grabber = new DoubleSolenoid(12, 0,1);
-	DoubleSolenoid m_grabber = new DoubleSolenoid(6, 6,7);
+	DoubleSolenoid m_grabber = new DoubleSolenoid(12, 0,1);
+	//DoubleSolenoid m_grabber = new DoubleSolenoid(6, 6,7);
 
 	double kP = 0.00008;
     double kI = 5e-6;

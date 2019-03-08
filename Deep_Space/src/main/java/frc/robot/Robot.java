@@ -749,19 +749,18 @@ public class Robot extends TimedRobot {
 
     public void teleopInit() {
         m_vision.disableTracking();
-
-        if(m_elevator.isExtended()){
-            m_pokeState = 2;
-        }else{
-            m_pokeState = 0;
-        }
     }
 
     int pressState = 0;
     int grabState = 0;
     public void teleopPeriodic() {     
         
-        m_drivetrain.arcadeDrive(m_joystick.getRawAxis(k_driveAxis), m_joystick.getRawAxis(k_turnAxis));
+        if(m_joystick.getRawAxis(3) > 0.5){
+            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(k_driveAxis), m_joystick.getRawAxis(k_turnAxis));
+        }else{
+            m_drivetrain.arcadeDrive(m_joystick.getRawAxis(k_driveAxis)/2, m_joystick.getRawAxis(k_turnAxis)/2);
+        }
+        
 
         // Switches to Place Panel mode and cancels any passthrough functions
         if(m_joystick.getRawButton(k_toPanelMode)){
@@ -872,7 +871,7 @@ public class Robot extends TimedRobot {
         switch(m_pokeState){
             case 0:
             m_pokeState = 0;
-                m_elevator.retract();
+                
                 if(m_joystick.getRawButton(k_poke))
                     m_pokeState = 1;
                 break;
@@ -883,6 +882,7 @@ public class Robot extends TimedRobot {
 
                 if(!m_joystick.getRawButton(k_poke)){
                     m_pokeState = 2;
+                    m_elevator.extend();
                     
                 }
                 break;
@@ -890,7 +890,7 @@ public class Robot extends TimedRobot {
             case 2:
 
                 m_pokeState = 2;
-                m_elevator.extend();
+                
                 if(m_joystick.getRawButton(k_poke)){
                     m_pokeState = 3;
                 }
@@ -902,6 +902,7 @@ public class Robot extends TimedRobot {
                 m_pokeState = 3;
                 
                 if(!m_joystick.getRawButton(k_poke)){
+                    m_elevator.retract();
                     m_pokeState = 0;
                     
                 }
@@ -1153,8 +1154,6 @@ public class Robot extends TimedRobot {
                 }
                 break;
         }
-
-         
 
         m_countdown++;
     }
