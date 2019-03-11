@@ -77,10 +77,10 @@ public class Robot extends TimedRobot {
     int k_turnAxis = 2;   
 
     // Navigator Controls (Xbox Controller)
-    int k_actuateFrontCylinders = 1;
+    int k_actuateFrontCylinders = 4;
     int k_actuateStand = 2;
     int k_actuateAll = 3;
-    int k_actuateBackCylinders = 4;
+    int k_actuateBackCylinders = 1;
 
     ComplexWidget m_selector;
     
@@ -94,6 +94,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Cargo Right", false);
         SmartDashboard.putBoolean("Cargo Left", false);
         SmartDashboard.putBoolean("Manual",true);
+
+        m_climber.raiseBack();
+        m_climber.raiseFront();
+        m_climber.raiseStand();
     }
 
     public void autonomousInit() {
@@ -755,7 +759,7 @@ public class Robot extends TimedRobot {
     int grabState = 0;
     public void teleopPeriodic() {     
         
-        if(m_joystick.getRawAxis(3) > 0.5){
+        if(m_joystick.getRawAxis(3) < 0){
             m_drivetrain.arcadeDrive(m_joystick.getRawAxis(k_driveAxis), m_joystick.getRawAxis(k_turnAxis));
         }else{
             m_drivetrain.arcadeDrive(m_joystick.getRawAxis(k_driveAxis)/2, m_joystick.getRawAxis(k_turnAxis)/2);
@@ -1035,7 +1039,7 @@ public class Robot extends TimedRobot {
                 break;
         }
 
-        
+        /** 
         switch(m_totalClimberState){
             case 0:
             m_totalClimberState = 0;
@@ -1154,7 +1158,7 @@ public class Robot extends TimedRobot {
                 }
                 break;
         }
-
+        */
         m_countdown++;
     }
 

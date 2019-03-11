@@ -26,11 +26,11 @@ public class Climber {
     }
 
     public void lowerStand(){
-        m_stand.set(Value.kForward);
+        m_stand.set(Value.kReverse);
     }
 
     public void raiseStand(){
-        m_stand.set(Value.kReverse);
+        m_stand.set(Value.kForward);
     }
 
     public void lowerBack(){

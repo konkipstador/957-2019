@@ -28,9 +28,9 @@ public class Elevator {
     double kD = 0.00001;
     double kIz = 2;
     double kFF = 0.0002;
-    int maxRPM = 4500;
-    int maxVel = 4500;
-	double maxAcc = 3500;
+    int maxRPM = 5700;
+    int maxVel = 5700;
+	double maxAcc = 3750;
 	
 	double grabHeight = 0;
 
@@ -45,6 +45,7 @@ public class Elevator {
 
 		m_spark.setInverted(false);
 		m_spark.setIdleMode(IdleMode.kBrake);
+		m_spark.setSmartCurrentLimit(30);
 		m_pidController.setP(kP);
 		m_pidController.setI(kI);
 		m_pidController.setD(kD);
@@ -62,12 +63,12 @@ public class Elevator {
 
 	/** Function used to test the elevator with a joystick. */
 	public void granular(double input){
-		m_targetPosition = m_targetPosition + input/6;
+		m_targetPosition = m_targetPosition + input/3;
 		if(m_targetPosition < 0.6){
 			m_targetPosition = 0.6;
 		}
-		if(m_targetPosition > 82){
-			m_targetPosition = 82;
+		if(m_targetPosition > 160){
+			m_targetPosition = 160;
 		}
 	}
 
@@ -88,12 +89,12 @@ public class Elevator {
 		if(m_targetPosition < 0.6){
 			m_targetPosition = 0.6;
 		}
-		if(m_targetPosition > 81){
-			m_targetPosition = 81;
+		if(m_targetPosition > 160){
+			m_targetPosition = 160;
 		}
 
 		if(m_placing){
-			finalPosition = m_targetPosition + 7;
+			finalPosition = m_targetPosition + 18;
 		}else{
 			finalPosition = m_targetPosition;
 		}
@@ -101,8 +102,8 @@ public class Elevator {
 		if(finalPosition < 0.6){
 			finalPosition = 0.6;
 		}
-		if(finalPosition > 81){
-			finalPosition = 81;
+		if(finalPosition > 160){
+			finalPosition = 160;
 		}
 		m_pidController.setReference(finalPosition, ControlType.kSmartMotion);
 	}
@@ -146,11 +147,11 @@ public class Elevator {
 
 	/** @return Maximum allowed drivetrain speed. Varies based on height. */
 	public double maximumDriveSpeed() {
-		if(m_encoder.getPosition() > 50){
+		if(m_encoder.getPosition() > 100){
 			return 0.2;
 		}
 
-		if(m_encoder.getPosition() > 20){
+		if(m_encoder.getPosition() > 40){
 			return 0.5;
 		}
 
@@ -173,11 +174,11 @@ public class Elevator {
 	public enum LiftLevels{
     
 		// Levels of the hatch ports
-		HATCH_LOW(0.6, "Hatch Low"), HATCH_MEDIUM(40, "Hatch Medium"), HATCH_HIGH(76, "Hatch High"),
+		HATCH_LOW(1.2, "Hatch Low"), HATCH_MEDIUM(80, "Hatch Medium"), HATCH_HIGH(142, "Hatch High"),
 		// Levels of the cargo ports
-		PORT_LOW(0.6, "Cargo Low"), PORT_CARGO_SHIP(40, "Cargo Ship"), PORT_MEDIUM(40, "Cargo Medium"), PORT_HIGH(82, "Cargo High"),
+		PORT_LOW(1.2, "Cargo Low"), PORT_CARGO_SHIP(50, "Cargo Ship"), PORT_MEDIUM(80, "Cargo Medium"), PORT_HIGH(164, "Cargo High"),
 		// Other Levels
-		GROUND(0.6, "very low, much ground");
+		GROUND(1.2, "very low, much ground");
 		
 		// Placeholder variables for the Enumerator structure
 		private final double m_encoderPosition;
