@@ -94,7 +94,7 @@ public class Elevator {
 		}
 
 		if(m_placing){
-			finalPosition = m_targetPosition + 18;
+			finalPosition = m_targetPosition + 16;
 		}else{
 			finalPosition = m_targetPosition;
 		}

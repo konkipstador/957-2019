@@ -98,6 +98,7 @@ public class Robot extends TimedRobot {
         m_climber.raiseBack();
         m_climber.raiseFront();
         m_climber.raiseStand();
+        m_elevator.retract();
     }
 
     public void autonomousInit() {
@@ -310,7 +311,7 @@ public class Robot extends TimedRobot {
                 if(m_drivetrain.getEncoder() > -10 ){
                     driveForward(-.65, 0, -80,-100);
                 }else{
-                    if(driveForward(-.7, -60, -110,-115)){
+                    if(driveForward(-.7, -50, -110,-115)){
                         m_autoStep++;
                         ticks = 0;
                     }
@@ -352,9 +353,10 @@ public class Robot extends TimedRobot {
 
                 case 8:
 
-                if(driveForward(-.7, -230, -90,-110)){
-                    m_autoStep++;
+                if(driveForward(-.7, -245, -120,-150)){
+                    //m_autoStep++;
                     ticks = 0;
+                    m_drivetrain.tank(0,0);
                 }
 
                 break;
@@ -365,11 +367,15 @@ public class Robot extends TimedRobot {
                 m_elevator.setLevel(LiftLevels.HATCH_HIGH);
                 m_elevator.extend();
                 if(m_drivetrain.getAngle() < -310){
-                    m_autoStep++;
+                    
                     m_drivetrain.tank(0,0);
                     ticks = 0;
                     m_vision.enableTracking();
                     m_drivetrain.refreshTargetAngle();
+
+                    if (m_elevator.getRaw() > 150) {
+                        m_autoStep++;
+                    }
                 }
 
                 break;
@@ -569,7 +575,7 @@ public class Robot extends TimedRobot {
                 case 1:
 
                 m_drivetrain.turnTo(-85);
-                if(m_drivetrain.getAngle() < -82){
+                if(m_drivetrain.getAngle() < -77){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                     ticks = 0;
@@ -593,15 +599,32 @@ public class Robot extends TimedRobot {
                 case 3:
                 ticks++;
                 if(m_drivetrain.target(-90) && ticks > 50){
-                    m_elevator.place();
-                    if(ticks2 > 25){
-                        m_autoStep++;
-                        m_elevator.retract();
-                        m_drivetrain.resetEncoders();
-                        m_vision.disableTracking();
-                    }
-                    ticks2++;
+
+                    m_drivetrain.arcadeDrive(0, 0);
+                    m_autoStep = 20;
+                    m_drivetrain.resetEncoders();      
+                    ticks2 =0;
                     
+                }
+
+                break;
+
+
+                case 20:
+
+                if(m_drivetrain.getLeftEncoder() < -0.2){
+                    m_elevator.place();
+                    ticks2++;
+                    m_drivetrain.arcadeDrive(0,0);
+                }else{
+                    m_drivetrain.autocade(0.05,0);
+                }
+                
+                if(ticks2 > 25){
+                    
+                    m_elevator.retract();
+                    m_autoStep = 4;
+                    m_vision.disableTracking();
                 }
 
                 break;
@@ -633,7 +656,7 @@ public class Robot extends TimedRobot {
 
                 case 6:
 
-                if(driveForward(0.6, -190, 175, 205)){
+                if(driveForward(0.6, -195, 175, 205)){
                     m_elevator.extend();
                     m_autoStep++;
                     ticks = 0;
