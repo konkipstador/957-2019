@@ -214,8 +214,10 @@ public class Drivetrain {
         }else{
             autocade(-0.2,target/50);
         }
+
+        System.out.print(m_vision.getTargetLocation());
         
-        if(m_leftEncoder.getVelocity() < 100){
+        if(m_leftEncoder.getVelocity() < 25){
             System.out.println("done");
             return true;
         }
@@ -255,24 +257,26 @@ public class Drivetrain {
             if(m_elevator.maximumDriveSpeed() == 0.2){
                 autocade(-.6,turn);
             }else{
-                autocade(-0.2,turn);
+                autocade(-0.15,turn);
             }
 
             return false;
+
         }else{
             m_angleFound = true;
             if(m_elevator.maximumDriveSpeed() == 0.2){
                 autocade(-.6,target/15*3);
             }else{
-                autocade(-0.2,target/50);
+                autocade(-0.15,target/50);
             }
             
-            if(m_leftEncoder.getVelocity() < 100){
-                System.out.println("done");
-                return true;
-            }
-            return false;
         }
+
+        if(Math.abs(m_leftEncoder.getVelocity()) < 1){
+            System.out.println("done");
+            return true;
+        }
+        return false;
         
     }
 

@@ -4,11 +4,13 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import frc.robot.Elevator.LiftLevels;
 import frc.robot.RobotState.State;
 
 public class CargoSystem{
 
     RobotState m_state = RobotState.getInstance();
+    Elevator m_elevator = Elevator.getInstance();
 
     DoubleSolenoid m_arm = new DoubleSolenoid(6,4,5);
     WPI_TalonSRX m_passthrough = new WPI_TalonSRX(7);
@@ -50,33 +52,39 @@ public class CargoSystem{
             case GRAB_CARGO:
 
                 armState = true;
-                passthroughSpeed = .75;
+                passthroughSpeed = 1;
+                shooterSpeed = .4;
 
                 if(!m_passthroughSensor.get()){
                     m_state.setState(State.PASSTHROUGH);
                 }
+
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
 
                 break;
 
             case GRAB_CARGO_FEEDER:
 
                 armState = false;
-                passthroughSpeed = .75;
+                passthroughSpeed = 1;
+                shooterSpeed = .4;
 
                 if(!m_passthroughSensor.get()){
                     m_state.setState(State.PASSTHROUGH);
                 }
+
+                m_elevator.setLevel(LiftLevels.HATCH_LOW);
 
                 break;
 
             case PASSTHROUGH:
 
                 armState = false;
-                passthroughSpeed = .5;
-                shooterSpeed = 0.3;
+                passthroughSpeed = 1;
+                shooterSpeed = 0.4;
 
                 if(!m_frontShooterSensor.get()){
-                    shooterSpeed = 0.25;
+                    shooterSpeed = 0.3;
                 }
 
                 if(!m_frontShooterSensor.get() && m_backShooterSensor.get()){

@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -267,141 +268,153 @@ public class Robot extends TimedRobot {
             case ROCKET_LEFT:
 
             switch(m_autoStep){
-                case 0:
-                m_elevator.retract();
-                if(driveForward(0.7, -2.5, 55,65)){
-                    m_autoStep++;
-                    m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                    m_elevator.grab();
-                    m_elevator.extend();
-                    ticks = 0;
-                    m_vision.enableTracking();
-                }
-    
-                break;
-    
-                case 1:
-                ticks++;
                 
-                if(m_drivetrain.target(0) && ticks > 15){
-                    storedAngle = m_drivetrain.getAngle();
+                case 0:
+                double sspeed = -.9;
+                if(m_drivetrain.getEncoder() > -170){
+                    sspeed = -.75;
+                }
+
+                if(driveForward(sspeed, 20, -180, -200)){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
-                    ticks = 0;
-                    m_vision.disableTracking();
                 }
-                    
+
                 break;
-    
-                case 2:
-    
-                m_elevator.place();
-                ticks++;
-                if(ticks > 25){
-                    m_autoStep = 5;
-                    m_drivetrain.resetEncoders();
-                    m_elevator.retract();
-                    
+
+                case 1:
+
+                
+
+                if(m_drivetrain.getAngle() < -25){
+                    m_drivetrain.tank(0,0);
+                    m_autoStep++;
+                    m_elevator.extend();
+                    m_elevator.grab();
+                    ticks = 0;
+                    ticks2 = 0;
+                    m_vision.enableTracking();
+                }else{
+                    m_drivetrain.autocade(0,.12);
                 }
-    
+
+                break;
+
+                case 2:
+
+                ticks++;
+                if(m_drivetrain.targetAngle(-30) && ticks > 50){
+                    
+                    m_drivetrain.tank(0,0);
+                    m_elevator.place();
+                    ticks2++;
+
+                    if(ticks2 > 15){
+                        m_autoStep++;
+                        m_vision.disableTracking();
+                        ticks = 0;
+                        ticks2 = 0;
+                        m_drivetrain.resetEncoders();
+                    }
+                }
+
+                break;
+
+                case 3:
+
+                ticks++;
+
+                if(ticks > 25){
+                    if(driveForward(-0.75,-30, -10,-20)){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                        m_elevator.retract();
+                    };
+                }
+
+                break;
+
+                case 4:
+
+                if(m_drivetrain.getAngle() > 0){
+                    m_drivetrain.tank(0,0);
+                    m_autoStep++;
+                    m_drivetrain.resetEncoders();
+                }else{
+                    m_drivetrain.autocade(0,-.25);
+                }
+
                 break;
 
                 case 5:
 
-                if(m_drivetrain.getEncoder() > -10 ){
-                    driveForward(-.65, 0, -80,-100);
-                }else{
-                    if(driveForward(-.7, -50, -110,-115)){
-                        m_autoStep++;
-                        ticks = 0;
-                    }
+                double angle = 5;
+                double speed = .8;
+                if(m_drivetrain.getEncoder() > 95){
+                    angle = -25;
+                     speed = .75;
                 }
-                
+                if(m_drivetrain.getEncoder() > 200){
+                    angle = 0;
+                    speed = .5;
+                }
+
+                if(driveForward(speed,angle, 230,230)){
+                    m_drivetrain.tank(0,0);
+                    m_autoStep++;
+                    ticks = 0;
+                    m_elevator.extend();
+                    m_vision.enableTracking();
+                };
+
                 break;
 
                 case 6:
 
                 ticks++;
-
-                m_drivetrain.turnTo(-190);
-                m_elevator.extend();
-                if(m_drivetrain.getAngle() < -180 && ticks > 60){
-                    m_autoStep++;
-                    ticks = 0;
-                    ticks2 = 0;
-                    m_vision.enableTracking();
+                if(m_drivetrain.targetAngle(10) && ticks > 25){
+                    ticks2++;
+                    m_drivetrain.tank(0,0);
+                    if(ticks2 > 25){
+                        m_autoStep++;
+                    }
+                    
+                    m_elevator.grab();
+                    m_vision.disableTracking();
+                    m_drivetrain.resetEncoders();
                 }
 
                 break;
 
                 case 7:
-
-                ticks++;
-                if(m_drivetrain.target(0) && ticks > 60){
-                    ticks2++;
-                    m_drivetrain.tank(0,0);
-                    m_drivetrain.resetEncoders();
-                    m_elevator.grab();
-
-                    if(ticks2 > 15){
-                        m_autoStep++;
-                        m_vision.disableTracking();
+                    m_elevator.retract();
+                    double speed2 = -.8;
+                    if( m_drivetrain.getEncoder() > 100){
+                        speed2 = -0.55;
                     }
-                }
+                    if(driveForward(speed2,-10, -120,-140)){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                        ticks = 0;
+                        
+                    };
 
                 break;
 
                 case 8:
 
-                if(driveForward(-.7, -245, -120,-150)){
-                    //m_autoStep++;
-                    ticks = 0;
-                    m_drivetrain.tank(0,0);
-                }
-
-                break;
-
-                case 9:
-
-                m_drivetrain.turnTo(-310);
-                m_elevator.setLevel(LiftLevels.HATCH_HIGH);
-                m_elevator.extend();
-                if(m_drivetrain.getAngle() < -310){
-                    
-                    m_drivetrain.tank(0,0);
-                    ticks = 0;
-                    m_vision.enableTracking();
-                    m_drivetrain.refreshTargetAngle();
-
-                    if (m_elevator.getRaw() > 150) {
-                        m_autoStep++;
+                    if(m_drivetrain.getAngle() < -130){
+                        m_drivetrain.arcadeDrive(.0,.15);
+                    }else{
+                        m_drivetrain.tank(0,0);
                     }
-                }
 
+                    
                 break;
 
-                case 10:
-
-                ticks++;
-                if(m_drivetrain.targetAngle(-360) && ticks > 100){
-                    m_autoStep++;
-                    m_drivetrain.tank(0,0);
-                    m_elevator.place();
-                    ticks = 0;
-                    m_vision.disableTracking();
-                }
-
-                break;
-
-                case 11:
-                m_drivetrain.tank(0,0);
-                ticks++;
-                if(ticks > 20){
-                    m_elevator.retract();
-                }
-
-                break;
             }
+
+
 
             break;
 
@@ -539,6 +552,7 @@ public class Robot extends TimedRobot {
                         m_autoStep++;
                         ticks = 0;
                         m_drivetrain.arcadeDrive(0,0);
+                        m_drivetrain.resetEncoders();
                     }
 
                     break;
@@ -560,11 +574,13 @@ public class Robot extends TimedRobot {
 
                 m_elevator.setLevel(LiftLevels.HATCH_LOW);
                 double speed = 0.5;
-                if(m_drivetrain.getEncoder() > 40){
+                double angle = 0;
+                if(m_drivetrain.getEncoder() < -80){
                     speed = 0.70;
+                    angle = 17;
                 }
 
-                if(driveForward(speed, 17, 135,156)){
+                if(driveForward(-speed, angle, -135,-159)){
                     m_autoStep++;     
                     m_elevator.grab();
                     m_elevator.extend();
@@ -574,9 +590,10 @@ public class Robot extends TimedRobot {
 
                 case 1:
 
-                m_drivetrain.turnTo(-85);
-                if(m_drivetrain.getAngle() < -77){
+                m_drivetrain.turnTo(85);
+                if(m_drivetrain.getAngle() > 77){
                     m_drivetrain.tank(0,0);
+                    m_autoStep++;
                     m_autoStep++;
                     ticks = 0;
                     ticks2 = 0;
@@ -598,7 +615,7 @@ public class Robot extends TimedRobot {
 
                 case 3:
                 ticks++;
-                if(m_drivetrain.target(-90) && ticks > 50){
+                if(m_drivetrain.target(90) && ticks > 50){
 
                     m_drivetrain.arcadeDrive(0, 0);
                     m_autoStep = 20;
@@ -612,7 +629,7 @@ public class Robot extends TimedRobot {
 
                 case 20:
 
-                if(m_drivetrain.getLeftEncoder() < -0.2){
+                if(m_drivetrain.getLeftEncoder() < -0.1){
                     m_elevator.place();
                     ticks2++;
                     m_drivetrain.arcadeDrive(0,0);
@@ -631,7 +648,7 @@ public class Robot extends TimedRobot {
 
                 case 4:
 
-                if(driveForward(-.5, -90, -12, -18)){
+                if(driveForward(-.5, 90, -12, -18)){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                 }
@@ -641,9 +658,9 @@ public class Robot extends TimedRobot {
 
                 case 5:
 
-                m_drivetrain.turnTo(-130);
+                m_drivetrain.turnTo(0);
                 ticks++;
-                if(m_drivetrain.getAngle() < -130){
+                if(m_drivetrain.getAngle() < 10){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                     ticks = 0;
@@ -656,7 +673,7 @@ public class Robot extends TimedRobot {
 
                 case 6:
 
-                if(driveForward(0.6, -195, 175, 205)){
+                if(driveForward(0.6, -10, 175, 205)){
                     m_elevator.extend();
                     m_autoStep++;
                     ticks = 0;
@@ -667,9 +684,9 @@ public class Robot extends TimedRobot {
 
                 case 7:
 
-                m_drivetrain.turnTo(-180);
+                m_drivetrain.turnTo(0);
                 ticks++;
-                if(m_drivetrain.getAngle() > -185){
+                if(m_drivetrain.getAngle() > -5){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                     ticks = 0;
@@ -699,7 +716,7 @@ public class Robot extends TimedRobot {
 
                 case 9:
 
-                if(driveForward(-.7, -200, -90,-110)){
+                if(driveForward(-.7, -20, -90,-110)){
                     m_autoStep++;
                     ticks = 0;
                     m_drivetrain.arcadeDrive(0,0);
@@ -795,17 +812,27 @@ public class Robot extends TimedRobot {
         }
 
         // Switches to Grab Cargo mode
-        if(m_joystick.getRawButton(k_toGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO_FEEDER)){
+        if(m_joystick.getRawButton(k_toGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO_FEEDER) && !m_cargoSystem.getFrontShooterSensor()){
             m_robotState.setState(State.GRAB_CARGO);
         }
 
         // Switches to Grab Cargo from feeder station mode
-        if(m_joystick.getRawButton(k_toFeederGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO)){
+        if(m_joystick.getRawButton(k_toFeederGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO) && !m_cargoSystem.getFrontShooterSensor()){
             m_robotState.setState(State.GRAB_CARGO_FEEDER);
         }
-  
-        if(m_robotState.state() == State.PLACE_PANEL){
 
+        if(m_cargoSystem.getFrontShooterSensor()){
+            // ELEVATOR HEIGHTS
+            if(m_joystick.getRawButton(k_elevatorHigh))
+                m_elevator.setLevel(LiftLevels.PORT_HIGH);
+            if(m_joystick.getRawButton(k_elevatorCargoShip))
+                m_elevator.setLevel(LiftLevels.PORT_CARGO_SHIP);
+            if(m_joystick.getRawButton(k_elevatorMed))
+                m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
+            if(m_joystick.getRawButton(k_elevatorLow))
+                m_elevator.setLevel(LiftLevels.PORT_LOW);       
+        }else{
+            
             // ELEVATOR CONTROLS
             if(m_joystick.getRawButton(k_elevatorHigh))
                 m_elevator.setLevel(LiftLevels.HATCH_HIGH);
@@ -813,6 +840,8 @@ public class Robot extends TimedRobot {
                 m_elevator.setLevel(LiftLevels.HATCH_MEDIUM);
             if(m_joystick.getRawButton(k_elevatorLow))
                 m_elevator.setLevel(LiftLevels.HATCH_LOW);
+            if(m_joystick.getRawButton(k_elevatorCargoShip))
+                m_elevator.setLevel(LiftLevels.PORT_CARGO_SHIP);
 
             // Controls the state of the passive grabber
             switch(grabState){
@@ -854,17 +883,7 @@ public class Robot extends TimedRobot {
             }      
         }
 
-        if(m_robotState.state() == State.PLACE_CARGO){
-            // ELEVATOR HEIGHTS
-            if(m_joystick.getRawButton(k_elevatorHigh))
-                m_elevator.setLevel(LiftLevels.PORT_HIGH);
-            if(m_joystick.getRawButton(k_elevatorCargoShip))
-                m_elevator.setLevel(LiftLevels.PORT_CARGO_SHIP);
-            if(m_joystick.getRawButton(k_elevatorMed))
-                m_elevator.setLevel(LiftLevels.PORT_MEDIUM);
-            if(m_joystick.getRawButton(k_elevatorLow))
-                m_elevator.setLevel(LiftLevels.PORT_LOW);       
-        }
+        
 
         // GRANULAR ELEVATOR CONTROLS
         if(m_joystick.getPOV(0) == 0){
@@ -1205,9 +1224,12 @@ public class Robot extends TimedRobot {
         ROCKET_RIGHT, ROCKET_LEFT, CARGO_RIGHT, CARGO_LEFT, MANUAL;
     }
 
+    AnalogInput m_panelSensor = new AnalogInput(3);
+
     public void updateDashboard(){
         // Update Gyro Position
         SmartDashboard.putNumber("Gyro Angle", m_drivetrain.getAngle());
+        SmartDashboard.putNumber("Panel Sensor", m_panelSensor.getVoltage());
 
         // Update Elevator Position
         SmartDashboard.putNumber("Raw Elevator Position", m_elevator.getRaw());
