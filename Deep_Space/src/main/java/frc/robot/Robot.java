@@ -7,15 +7,12 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.libraries.MiniPID;
@@ -94,6 +91,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Rocket Left", false);
         SmartDashboard.putBoolean("Cargo Right", false);
         SmartDashboard.putBoolean("Cargo Left", false);
+        SmartDashboard.putBoolean("Front Left Cargo", false);
         SmartDashboard.putBoolean("Manual",true);
 
         m_climber.raiseBack();
@@ -124,6 +122,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Rocket Left", false);
             SmartDashboard.putBoolean("Cargo Right", false);
             SmartDashboard.putBoolean("Cargo Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
             SmartDashboard.putBoolean("Manual", false);
         }
         
@@ -303,7 +302,7 @@ public class Robot extends TimedRobot {
                 case 2:
 
                 ticks++;
-                if(m_drivetrain.targetAngle(-30) && ticks > 50){
+                if(ticks > 75){
                     
                     m_drivetrain.tank(0,0);
                     m_elevator.place();
@@ -316,6 +315,8 @@ public class Robot extends TimedRobot {
                         ticks2 = 0;
                         m_drivetrain.resetEncoders();
                     }
+                }else{
+                    m_drivetrain.targetAngle(30);
                 }
 
                 break;
@@ -351,12 +352,12 @@ public class Robot extends TimedRobot {
                 double angle = 5;
                 double speed = .8;
                 if(m_drivetrain.getEncoder() > 95){
-                    angle = -25;
+                    angle = -30;
                      speed = .75;
                 }
                 if(m_drivetrain.getEncoder() > 200){
                     angle = 0;
-                    speed = .5;
+                    speed = .65;
                 }
 
                 if(driveForward(speed,angle, 230,230)){
@@ -372,7 +373,7 @@ public class Robot extends TimedRobot {
                 case 6:
 
                 ticks++;
-                if(m_drivetrain.targetAngle(10) && ticks > 25){
+                if(ticks > 75){
                     ticks2++;
                     m_drivetrain.tank(0,0);
                     if(ticks2 > 25){
@@ -382,15 +383,17 @@ public class Robot extends TimedRobot {
                     m_elevator.grab();
                     m_vision.disableTracking();
                     m_drivetrain.resetEncoders();
+                }else{
+                    m_drivetrain.targetAngle(10);
                 }
 
                 break;
 
                 case 7:
                     m_elevator.retract();
-                    double speed2 = -.8;
+                    double speed2 = -.65;
                     if( m_drivetrain.getEncoder() > 100){
-                        speed2 = -0.55;
+                        speed2 = -0.3;
                     }
                     if(driveForward(speed2,-10, -120,-140)){
                         m_drivetrain.tank(0,0);
@@ -403,7 +406,7 @@ public class Robot extends TimedRobot {
 
                 case 8:
 
-                    if(m_drivetrain.getAngle() < -130){
+                    if(m_drivetrain.getAngle() > -130){
                         m_drivetrain.arcadeDrive(.0,.15);
                     }else{
                         m_drivetrain.tank(0,0);
@@ -732,6 +735,28 @@ public class Robot extends TimedRobot {
             }
             break;
 
+            case FRONT_LEFT_CARGO:
+
+                switch(m_autoStep){
+
+                    case 0:
+
+                    if(m_drivetrain.getEncoder() > 50){
+                        m_elevator.extend();
+                        m_elevator.grab();
+                    }
+
+                    if(driveForward(0.6, 0, 70, 80)){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                    }
+                    break;
+                }
+
+            
+
+            break;
+
             case MANUAL:
 
                 teleopPeriodic();
@@ -812,16 +837,21 @@ public class Robot extends TimedRobot {
         }
 
         // Switches to Grab Cargo mode
-        if(m_joystick.getRawButton(k_toGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO_FEEDER) && !m_cargoSystem.getFrontShooterSensor()){
+        if(m_joystick.getRawButton(k_toGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO_FEEDER) && m_cargoSystem.getFrontShooterSensor()){
             m_robotState.setState(State.GRAB_CARGO);
         }
 
         // Switches to Grab Cargo from feeder station mode
-        if(m_joystick.getRawButton(k_toFeederGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO) && !m_cargoSystem.getFrontShooterSensor()){
+        if(m_joystick.getRawButton(k_toFeederGrabMode) && (m_robotState.state() == State.PLACE_PANEL || m_robotState.state() == State.GRAB_CARGO) && m_cargoSystem.getFrontShooterSensor()){
             m_robotState.setState(State.GRAB_CARGO_FEEDER);
         }
 
-        if(m_cargoSystem.getFrontShooterSensor()){
+        if(m_robotState.state() != State.PLACE_PANEL){
+            grabState = 0;
+            m_elevator.place();
+        }
+
+        if(!m_cargoSystem.getFrontShooterSensor()){
             // ELEVATOR HEIGHTS
             if(m_joystick.getRawButton(k_elevatorHigh))
                 m_elevator.setLevel(LiftLevels.PORT_HIGH);
@@ -832,7 +862,7 @@ public class Robot extends TimedRobot {
             if(m_joystick.getRawButton(k_elevatorLow))
                 m_elevator.setLevel(LiftLevels.PORT_LOW);       
         }else{
-            
+
             // ELEVATOR CONTROLS
             if(m_joystick.getRawButton(k_elevatorHigh))
                 m_elevator.setLevel(LiftLevels.HATCH_HIGH);
@@ -953,6 +983,17 @@ public class Robot extends TimedRobot {
                     
                 }
                 break;
+        }
+
+        if(m_nav.getRawButton(8)){
+            m_frontClimberState = 0;
+            m_backClimberState = 0;
+            m_climberStandState = 0;
+            m_totalClimberState = 0;
+
+            m_climber.raiseBack();
+            m_climber.raiseStand();
+            m_climber.raiseFront();
         }
 
         // CLIMBER CONTROLS
@@ -1081,7 +1122,7 @@ public class Robot extends TimedRobot {
                 break;
         }
 
-        /** 
+        
         switch(m_totalClimberState){
             case 0:
             m_totalClimberState = 0;
@@ -1155,7 +1196,7 @@ public class Robot extends TimedRobot {
                 m_totalClimberState = 7;
                 
                 if(!m_nav.getRawButton(k_actuateAll)){
-                    m_climber.raiseBack();
+                    m_climber.lowerStand();
                     m_totalClimberState = 8;
                     
                 }
@@ -1172,7 +1213,7 @@ public class Robot extends TimedRobot {
                 m_totalClimberState = 9;
 
                 if(!m_nav.getRawButton(k_actuateAll)){
-                    m_climber.lowerStand();
+                    m_climber.raiseBack();
                     m_totalClimberState = 10;
                     
                 }
@@ -1183,24 +1224,14 @@ public class Robot extends TimedRobot {
                 m_totalClimberState = 10;
                 
                 if(m_nav.getRawButton(k_actuateAll)){
-                    m_totalClimberState = 11;
-                    
-                }
-                    
-                break;
-
-            case 11:
-
-                m_totalClimberState = 11;
-                
-                if(!m_nav.getRawButton(k_actuateAll)){
-                    m_climber.raiseStand();
                     m_totalClimberState = 0;
                     
                 }
+                    
                 break;
+
         }
-        */
+    
         m_countdown++;
     }
 
@@ -1221,15 +1252,16 @@ public class Robot extends TimedRobot {
     }
 
     enum Auto{
-        ROCKET_RIGHT, ROCKET_LEFT, CARGO_RIGHT, CARGO_LEFT, MANUAL;
+        ROCKET_RIGHT, ROCKET_LEFT, CARGO_RIGHT, CARGO_LEFT, MANUAL, FRONT_LEFT_CARGO;
     }
 
-    AnalogInput m_panelSensor = new AnalogInput(3);
+    //DigitalInput m_panelSensor = new DigitalInput(3);
 
     public void updateDashboard(){
+        
         // Update Gyro Position
         SmartDashboard.putNumber("Gyro Angle", m_drivetrain.getAngle());
-        SmartDashboard.putNumber("Panel Sensor", m_panelSensor.getVoltage());
+        //SmartDashboard.putNumber("Panel Sensor", m_panelSensor.getVoltage());
 
         // Update Elevator Position
         SmartDashboard.putNumber("Raw Elevator Position", m_elevator.getRaw());
@@ -1261,6 +1293,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Cargo Right", false);
             SmartDashboard.putBoolean("Cargo Left", false);
             SmartDashboard.putBoolean("Rocket Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
         }
 
         if(SmartDashboard.getBoolean("Cargo Right", false) && lastSelected != 1){
@@ -1270,6 +1303,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Rocket Right", false);
             SmartDashboard.putBoolean("Cargo Left", false);
             SmartDashboard.putBoolean("Rocket Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
         }   
 
         if(SmartDashboard.getBoolean("Manual", false) && lastSelected != 2){
@@ -1279,6 +1313,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Cargo Right", false);
             SmartDashboard.putBoolean("Cargo Left", false);
             SmartDashboard.putBoolean("Rocket Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
         }
 
         if(SmartDashboard.getBoolean("Cargo Left", false) && lastSelected != 3){
@@ -1288,6 +1323,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Rocket Right", false);
             SmartDashboard.putBoolean("Cargo Right", false);
             SmartDashboard.putBoolean("Rocket Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
         }
 
         if(SmartDashboard.getBoolean("Rocket Left", false) && lastSelected != 4){
@@ -1297,7 +1333,19 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Rocket Right", false);
             SmartDashboard.putBoolean("Cargo Right", false);
             SmartDashboard.putBoolean("Cargo Left", false);
+            SmartDashboard.putBoolean("Front Left Cargo", false);
         }
+        
+        if(SmartDashboard.getBoolean("Front Left Cargo", false) && lastSelected != 5){
+            m_autoMode = Auto.FRONT_LEFT_CARGO;
+            lastSelected = 5;
+            SmartDashboard.putBoolean("Manual", false);
+            SmartDashboard.putBoolean("Rocket Right", false);
+            SmartDashboard.putBoolean("Cargo Right", false);
+            SmartDashboard.putBoolean("Cargo Left", false);
+            SmartDashboard.putBoolean("Rocket Left", false);
+        }
+
 
     }
 }

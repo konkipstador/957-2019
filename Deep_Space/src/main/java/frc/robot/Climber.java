@@ -18,11 +18,11 @@ public class Climber {
     //DoubleSolenoid m_stand = new DoubleSolenoid(12, 0, 1);
 
     public void lowerFront(){
-        m_back.set(Value.kForward);
+        m_front.set(Value.kForward);
     }
 
     public void raiseFront(){
-        m_back.set(Value.kReverse);
+        m_front.set(Value.kReverse);
     }
 
     public void lowerStand(){
@@ -34,11 +34,11 @@ public class Climber {
     }
 
     public void lowerBack(){
-        m_front.set(Value.kForward);
+        m_back.set(Value.kForward);
     }
 
     public void raiseBack(){
-        m_front.set(Value.kReverse);
+        m_back.set(Value.kReverse);
     }
 
 }
