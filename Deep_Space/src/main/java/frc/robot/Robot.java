@@ -576,14 +576,10 @@ public class Robot extends TimedRobot {
                 case 0:
 
                 m_elevator.setLevel(LiftLevels.HATCH_LOW);
-                double speed = 0.5;
-                double angle = 0;
-                if(m_drivetrain.getEncoder() < -80){
-                    speed = 0.70;
-                    angle = 17;
-                }
+                double speed = 0.7;
+                double angle = 9;
 
-                if(driveForward(-speed, angle, -135,-159)){
+                if(driveForward(-speed, angle, -140,-155)){
                     m_autoStep++;     
                     m_elevator.grab();
                     m_elevator.extend();
@@ -593,38 +589,39 @@ public class Robot extends TimedRobot {
 
                 case 1:
 
-                m_drivetrain.turnTo(85);
-                if(m_drivetrain.getAngle() > 77){
+                
+                if(m_drivetrain.getAngle() > 85){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                     m_autoStep++;
                     ticks = 0;
                     ticks2 = 0;
                     m_vision.enableTracking();
+                }else{
+                    m_drivetrain.autocade(0,-.2);
                 }
 
                 break;
 
                 case 2:
 
-                
-
-                if(m_drivetrain.faceTarget()){
-                    m_autoStep++;
-                }
+                m_autoStep++;
                 
 
                 break;
 
                 case 3:
                 ticks++;
-                if(m_drivetrain.target(90) && ticks > 50){
+                if(ticks > 60){
 
                     m_drivetrain.arcadeDrive(0, 0);
                     m_autoStep = 20;
                     m_drivetrain.resetEncoders();      
                     ticks2 =0;
+                    ticks = 0;
                     
+                }else{
+                    m_drivetrain.target(90);
                 }
 
                 break;
@@ -632,26 +629,28 @@ public class Robot extends TimedRobot {
 
                 case 20:
 
-                if(m_drivetrain.getLeftEncoder() < -0.1){
-                    m_elevator.place();
-                    ticks2++;
-                    m_drivetrain.arcadeDrive(0,0);
-                }else{
-                    m_drivetrain.autocade(0.05,0);
-                }
-                
-                if(ticks2 > 25){
+                    ticks++;
+
+                    if(ticks > 5){
+                        m_elevator.place();
+                        ticks2++;
+                        m_drivetrain.tank(0,0);
+                    }else{
+                        m_drivetrain.autocade(0.05,0);
+                    }
+
+                    if(ticks2 > 25){
                     
-                    m_elevator.retract();
-                    m_autoStep = 4;
-                    m_vision.disableTracking();
-                }
+                        m_elevator.retract();
+                        m_autoStep = 4;
+                        m_vision.disableTracking();
+                    }
 
                 break;
 
                 case 4:
 
-                if(driveForward(-.5, 90, -12, -18)){
+                if(driveForward(-.5, 90, -8, -14)){
                     m_drivetrain.tank(0,0);
                     m_autoStep++;
                 }
@@ -676,7 +675,7 @@ public class Robot extends TimedRobot {
 
                 case 6:
 
-                if(driveForward(0.6, -10, 175, 205)){
+                if(driveForward(0.6, -15, 175, 205)){
                     m_elevator.extend();
                     m_autoStep++;
                     ticks = 0;
@@ -703,7 +702,7 @@ public class Robot extends TimedRobot {
                 case 8:
                 
                     ticks++;
-                    if(m_drivetrain.target(0) && ticks > 20){
+                    if(ticks > 40){
                         m_elevator.grab();
                         ticks2++;
                         if(ticks2 > 20){
@@ -711,8 +710,12 @@ public class Robot extends TimedRobot {
                             m_autoStep++;
                             m_drivetrain.resetEncoders();
                             m_vision.disableTracking();
+                        }else{
+                            m_drivetrain.autocade(0.05,0);
                         }
                         
+                    }else{
+                        m_drivetrain.target(0);
                     }
                     
                 break;
@@ -746,10 +749,163 @@ public class Robot extends TimedRobot {
                         m_elevator.grab();
                     }
 
-                    if(driveForward(0.6, 0, 70, 80)){
+                    if(driveForward(0.65, 0, 80, 90)){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                        ticks = 0;
+                        m_vision.enableTracking();
+                    }
+                    break;
+
+                    case 1:
+
+                    ticks++;
+
+                    if(ticks > 35){
+                        m_drivetrain.tank(0,0);
+                        m_vision.disableTracking();
+                        m_autoStep++;
+                        m_drivetrain.resetEncoders();
+                        ticks2 = 0;
+                    }else{
+                        m_drivetrain.target(0);
+                    }
+
+                    break;
+
+                    case 2:
+
+                    ticks++;
+
+                    if(ticks > 5){
+                        m_elevator.place();
+                        ticks2++;
+                        m_drivetrain.tank(0,0);
+                    }else{
+                        m_drivetrain.autocade(0.05,0);
+                    }
+
+                    if(ticks2 > 25){
+                    
+                        m_elevator.retract();
+                        m_autoStep++;
+                        m_vision.disableTracking();
+                    }
+
+                    break;
+
+                    case 3:
+
+                    if(driveForward(-0.7, 0, -35, -35)){
                         m_drivetrain.tank(0,0);
                         m_autoStep++;
                     }
+
+                    break;
+
+                    case 4:
+
+                    if(m_drivetrain.getAngle() > 65){
+                        m_drivetrain.tank(0,0);
+                        m_autoStep++;
+                        m_drivetrain.resetEncoders();
+                    }else{
+                        m_drivetrain.autocade(0,-0.45);
+                    }
+
+                    break;
+                    
+
+                    case 5:
+
+                    double speed = 0;
+
+                    if(m_drivetrain.getEncoder() < 65){
+                        if(driveForward(0.7, 90, 100, 100)){
+                            m_drivetrain.tank(0,0);
+                            m_autoStep++;
+                        }
+                    }else{
+                        if(sharpForward(0.7, 180, 135, 135)){
+                            m_drivetrain.tank(0,0);
+                            m_autoStep++;
+                            m_elevator.extend();
+                            m_vision.enableTracking();
+                            ticks = 0;
+                            ticks2 = 0;
+                        }
+                    }
+
+                    break;
+
+                    case 6:
+
+                    ticks++;
+                    if(ticks > 40){
+                        m_elevator.grab();
+                        ticks2++;
+                        if(ticks2 > 20){
+                            m_drivetrain.tank(0,0);
+                            m_autoStep++;
+                            m_drivetrain.resetEncoders();
+                            m_vision.disableTracking();
+                        }else{
+                            m_drivetrain.autocade(0.05,0);
+                        }
+                        
+                    }else{
+                        m_drivetrain.target(0);
+                    }
+
+                    break;
+
+                    case 7:
+
+                        if(driveForward(-0.8, 165, -170, -182)){
+                            m_drivetrain.tank(0,0);
+                            m_autoStep++;
+                        }
+
+                    break;
+
+                    case 8:
+
+                        if(m_drivetrain.getAngle() > 250){
+                            m_drivetrain.tank(0,0);
+                            m_autoStep++;
+                            m_drivetrain.resetEncoders();
+                            m_vision.enableTracking();
+                            ticks = 0;
+                            ticks2 = 0;
+                        }else{
+                            m_drivetrain.autocade(0,-0.45);
+                        }
+
+                    break;
+
+                    case 9:
+
+                    ticks++;
+
+                    if(ticks > 125){
+                        m_drivetrain.tank(0,0);
+                        m_vision.disableTracking();
+                        m_autoStep++;
+                        m_drivetrain.resetEncoders();
+                        ticks2 = 0;
+                        m_elevator.place();
+                    }else{
+                        m_drivetrain.targetAngle(270);
+                    }
+
+                    break;
+
+                    case 10:
+
+                        
+
+                        m_drivetrain.tank(0,0.025);
+
                     break;
                 }
 
@@ -789,6 +945,50 @@ public class Robot extends TimedRobot {
                 turn = -0.35;
             }else{
                 turn = -0.25;
+            }
+        }
+
+        if(speed > 0){
+            if(m_drivetrain.getEncoder() < point1){
+                m_drivetrain.arcadeDrive(-speed, turn);
+                return false;
+            }else if(m_drivetrain.getEncoder() < point2){
+                m_drivetrain.arcadeDrive(-speed*0.5, turn);
+                return false;
+            }
+        }else{
+            if(m_drivetrain.getEncoder() > point1){
+                m_drivetrain.arcadeDrive(-speed, turn);
+                return false;
+            }else if(m_drivetrain.getEncoder() > point2){
+                m_drivetrain.arcadeDrive(-speed*0.5, turn);
+                return false;
+            }
+        }
+        
+
+        m_drivetrain.arcadeDrive(0,0);
+
+        return true;
+    }
+
+    public boolean sharpForward(double speed, double angle, double point1, double point2){
+
+        double turn = 0;
+        if(m_drivetrain.getAngle() > angle+maxDeviation){
+
+            if(angle < m_drivetrain.getAngle()-5){
+                turn = 0.6;
+            }else{
+                turn = 0.2;
+            }
+        }
+
+        if(m_drivetrain.getAngle() < angle-maxDeviation){
+            if(angle > m_drivetrain.getAngle()+5){
+                turn = -0.6;
+            }else{
+                turn = -0.2;
             }
         }
 
@@ -1255,13 +1455,13 @@ public class Robot extends TimedRobot {
         ROCKET_RIGHT, ROCKET_LEFT, CARGO_RIGHT, CARGO_LEFT, MANUAL, FRONT_LEFT_CARGO;
     }
 
-    //DigitalInput m_panelSensor = new DigitalInput(3);
+    DigitalInput m_panelSensor = new DigitalInput(5);
 
     public void updateDashboard(){
         
         // Update Gyro Position
         SmartDashboard.putNumber("Gyro Angle", m_drivetrain.getAngle());
-        //SmartDashboard.putNumber("Panel Sensor", m_panelSensor.getVoltage());
+        SmartDashboard.putBoolean("Panel Sensor", m_panelSensor.get());
 
         // Update Elevator Position
         SmartDashboard.putNumber("Raw Elevator Position", m_elevator.getRaw());
