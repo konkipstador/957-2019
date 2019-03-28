@@ -49,6 +49,7 @@ public class Drivetrain {
     double m_leftEncoderOffset = 0;
 
     double m_magicNumber = 0;
+    double histVision = -100;
 
     /**
      * Drivetrain constructor, which is called automatically when an instance of the
@@ -99,6 +100,7 @@ public class Drivetrain {
     double outputD = 0;
     double ramp = 0.1;
     public void arcadeDrive(double speed, double turn){
+        histVision = -100;
 
         
         if(speed > 0){
@@ -223,7 +225,6 @@ public class Drivetrain {
         }
         return false;
     }
-
     boolean m_angleFound = false;
 
     public void refreshTargetAngle(){
@@ -240,17 +241,17 @@ public class Drivetrain {
             if(m_drivetrain.getAngle() > desiredAngle+2){
 
                 if(desiredAngle < m_drivetrain.getAngle()-5){
-                    turn = 0.15;
+                    turn = 0.5;
                 }else{
-                    turn = 0.10;
+                    turn = 0.3;
                 }
         }
 
             if(m_drivetrain.getAngle() < desiredAngle-2){
                 if(desiredAngle > m_drivetrain.getAngle()+5){
-                    turn = -0.15;
+                    turn = -0.5;
                 }else{
-                    turn = -0.10;
+                    turn = -0.3;
                 }
             }
 
@@ -267,7 +268,7 @@ public class Drivetrain {
             if(m_elevator.maximumDriveSpeed() == 0.2){
                 autocade(-.6,target/15*3);
             }else{
-                autocade(-0.15,target/50);
+                autocade(-0.15,target/65);
             }
             
         }
@@ -289,7 +290,7 @@ public class Drivetrain {
         if(m_elevator.maximumDriveSpeed() == 0.2){
             autocade(0,target/15*3);
         }else{
-            autocade(0,target/50);
+            autocade(0,target/65);
         }
         
         if(Math.abs(target) < 2){
@@ -351,6 +352,10 @@ public class Drivetrain {
     public double getCurrent(){
         return m_leftNeoMaster.getOutputCurrent() + m_leftNeoSlave.getOutputCurrent() + 
                m_rightNeoMaster.getOutputCurrent() + m_rightNeoSlave.getOutputCurrent();
+    }
+
+    public enum Ignore{
+        NONE, LEFT, RIGHT;
     }
 
     // _____MATH FUNCTIONS_____

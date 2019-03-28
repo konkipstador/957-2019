@@ -15,6 +15,12 @@ public class Vision {
     NetworkTableEntry m_piX3;
     NetworkTableEntry m_piX4;
 
+    NetworkTableEntry m_limelightX1;
+    NetworkTableEntry m_limelightX2;
+    NetworkTableEntry m_limelightX3;
+
+    NetworkTableEntry m_limelightSize;
+
     NetworkTableEntry m_camMode;
 
     NetworkTableEntry m_streams;
@@ -32,6 +38,12 @@ public class Vision {
         m_piX3 = pi.getEntry("px3");
         m_piX4 = pi.getEntry("px4");
 
+        m_limelightX1 = limelight.getEntry("tx1");
+        m_limelightX2 = limelight.getEntry("tx2");
+        m_limelightX3 = limelight.getEntry("tx3");
+
+        m_limelightSize = limelight.getEntry("ta");
+
         m_camMode = NetworkTableInstance.getDefault().getTable("limelight").getEntry("camMode");
         m_camMode.setNumber(1);
 
@@ -40,7 +52,35 @@ public class Vision {
     }
 
     public double getTargetLocation(){
-        return m_limelightX.getDouble(0);
+
+        
+        double target = m_limelightX.getDouble(0);
+
+        if(target > 20){
+            return 0;
+        }
+
+        if(target < -20){
+            return 0;
+        }
+
+        if(m_limelightSize.getDouble(0) > 6 && Math.abs(m_limelightX.getDouble(0))> 5){
+            return 0;
+        }
+
+        return target-0.5;
+        
+        /** 
+        double x1 = m_limelightX1.getDouble(0);
+        double x2 = m_limelightX2.getDouble(0);
+        double x3 = m_limelightX3.getDouble(0);
+
+        return (x1 + x2)/2;
+        */
+    }
+
+    boolean SameSign(double x, double y){
+    return (x >= 0) ^ (y < 0);
     }
 
     public void enableTracking(){

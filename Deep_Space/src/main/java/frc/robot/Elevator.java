@@ -33,6 +33,7 @@ public class Elevator {
 	double maxAcc = 3750;
 	
 	double grabHeight = 0;
+	
 
 	double m_position = 0;
 	boolean m_placing = false;
@@ -129,6 +130,10 @@ public class Elevator {
 	public void grab(){
 		grabHeight = m_encoder.getPosition();
 		m_placing = true;
+	}
+
+	public boolean isGrabbing(){
+		return m_placing;
 	}
 
 	public void reset(){

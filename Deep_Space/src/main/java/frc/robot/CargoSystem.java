@@ -55,7 +55,7 @@ public class CargoSystem{
                 passthroughSpeed = 1;
                 shooterSpeed = .22;
 
-                if(!m_passthroughSensor.get()){
+                if(!m_passthroughSensor.get() || !m_frontShooterSensor.get() || !m_backShooterSensor.get()){
                     m_state.setState(State.PASSTHROUGH);
                 }
 
@@ -69,7 +69,7 @@ public class CargoSystem{
                 passthroughSpeed = 1;
                 shooterSpeed = .22;
 
-                if(!m_passthroughSensor.get()){
+                if(!m_passthroughSensor.get() || !m_frontShooterSensor.get() || !m_backShooterSensor.get()){
                     m_state.setState(State.PASSTHROUGH);
                 }
 
@@ -82,10 +82,6 @@ public class CargoSystem{
                 armState = false;
                 passthroughSpeed = 1;
                 shooterSpeed = 0.2;
-
-                if(!m_frontShooterSensor.get()){
-                    shooterSpeed = 0.2;
-                }
 
                 if(!m_frontShooterSensor.get() && m_backShooterSensor.get()){
                     m_state.setState(State.PLACE_CARGO);
