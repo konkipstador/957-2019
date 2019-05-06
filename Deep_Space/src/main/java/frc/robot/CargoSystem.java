@@ -12,7 +12,7 @@ public class CargoSystem{
     RobotState m_state = RobotState.getInstance();
     Elevator m_elevator = Elevator.getInstance();
 
-    DoubleSolenoid m_arm = new DoubleSolenoid(6,4,5);
+    DoubleSolenoid m_arm = new DoubleSolenoid(12,4,5);
     WPI_TalonSRX m_passthrough = new WPI_TalonSRX(7);
     WPI_TalonSRX m_shooterL = new WPI_TalonSRX(8);
     WPI_TalonSRX m_shooterR = new WPI_TalonSRX(9);
